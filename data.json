@@ -1,6 +1,6 @@
 {
    "settings": {
-      "skip_intro": true,
+      "skip_intro": false,
       "debug": true,
       "language": "en"
    },

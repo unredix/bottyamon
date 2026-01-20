@@ -1,6 +1,7 @@
 import cmd
 import json
 import random
+import time
 from pathlib import Path
 from rich.console import Console # type: ignore
 from rich.panel import Panel # type: ignore
@@ -9,8 +10,6 @@ from rich import print as rprint # type: ignore
 from rich.tree import Tree # type: ignore
 
 from models import Player, World, Battle, Bottyamon
-
-current_world = ""
 
 def checkFile(file):
     dataFile = Path(file)
@@ -40,6 +39,49 @@ def isDebug(file):
     else:
         return False
 
+def createWorld(name, length):
+    world = World(name)
+    seed = world.genSeed()
+    
+    if isDebug("data.json"):
+        rprint("[gray]Debug: [/gray]", "[yellow]Seed [/yellow]", seed)
+    
+    world.seed = seed
+    world.buildWorld(world.seed, length)
+
+    return world
+
+def typeText(text, style, delay):
+    for i in text:
+        rprint(f"[{style}]{i}[/{style}]", end="", flush=True)
+        time.sleep(delay)
+    rprint()
+
+def storyTeller(text):
+    typeText(f"[Story] {text}", "white", 0.05)
+def playerMon(text):
+    typeText(f'[Player] "{text}"', "blue", 0.05)
+def npcMon(text, npcName):
+    typeText(f'[{npcName}] "{text}"', "cyan", 0.05)
+
+def clearScreen():
+    print("\033c", end="")
+
+def playIntro():
+    rprint("-------------------------------------------------")
+    time.sleep(1.5)
+    typeText("...", "green", 1)
+    clearScreen()
+    storyTeller("You open your eyes and find an unfamiliar ceiling. You don't remember anything or anyone. As you sit up, you try desperately to remember anything that might give you a clue who you might be.")
+    time.sleep(1)
+    playerMon("It's no use...")
+    time.sleep(1)
+    storyTeller("After some time you decide to go out from your room to look around.")
+    time.sleep(1)
+    playerMon("...")
+    storyTeller("The sight of a small tavern's inside welcomed you. As you walk down on the stairs towards the exit the receptionist call after you.")
+    npcMon("Hey! I got something for you!", "Receptionist")
+
 class BottyamonCmd(cmd.Cmd):
 
     intro = print(r"""    _____                                                                 _____ 
@@ -68,6 +110,7 @@ class BottyamonCmd(cmd.Cmd):
     def __init__(self, completekey = "tab", stdin = None, stdout = None):
         super().__init__(completekey, stdin, stdout)
         self.console = Console()
+        self.current_world = object
 
     def do_load(self, args):
         """load [save]/[new] (save name)
@@ -88,14 +131,11 @@ class BottyamonCmd(cmd.Cmd):
         if args[0] == "new":
             name = args[1]
             
-            newWorld = World(name)
-            seed = newWorld.genSeed()
-            if isDebug("data.json"):
-                rprint("[gray]Debug: [/gray]", "[yellow]Seed [/yellow]", seed)
-            newWorld.seed = seed
-            newWorld.buildWorld(newWorld.seed, 30)
-
+            self.current_world = createWorld(name, 30)
             self.console.print("[green]New game started:[/green]", args[1])
+            
+            playIntro()
+
         elif args[0] == "save":
             self.console.print ("[green]Loading save:[/green]", args[1])
         else:
@@ -108,7 +148,6 @@ class BottyamonCmd(cmd.Cmd):
 
         return True
     def do_settings(self, args):
-
         """settings list|setting (true/false/other)
         A command to list and change settings"""
 
@@ -194,13 +233,40 @@ class BottyamonCmd(cmd.Cmd):
 
             random.seed(seed)
             events = []
+            
+            shopPity = 0
+            safePointPity = 0
 
             for _ in range(length):
-                events.append(random.randint(1, 15))
+                eventNum = random.randint(1,15)
+                
+                if shopPity >= 5:
+                    events.append(1)
+                    shopPity = 0
+                    pass
+                
+                if safePointPity >= 10:
+                    events.append(15)
+                    safePointPity = 0
+                    pass
 
+                if eventNum != 1: shopPity += 1 
+                else:
+                    if shopPity == 0:
+                        eventNum = random.randint(2, 14)
+                    shopPity = 0 
+                if eventNum != 15: safePointPity += 1
+                else: 
+                    if safePointPity == 0:
+                        eventNum = random.randint(2, 14)
+                    safePointPity = 0
+                
+                events.append(eventNum)
+            
             self.console.print(events)
 
+        if args[0] == "play_intro":
+            playIntro()
 
 if __name__ == '__main__':
-    
     BottyamonCmd().cmdloop()
