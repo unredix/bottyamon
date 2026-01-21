@@ -68,7 +68,6 @@ def clearScreen():
     print("\033c", end="")
 
 def playIntro():
-    rprint("-------------------------------------------------")
     time.sleep(1.5)
     typeText("...", "green", 1)
     clearScreen()
@@ -81,6 +80,25 @@ def playIntro():
     playerMon("...")
     storyTeller("The sight of a small tavern's inside welcomed you. As you walk down on the stairs towards the exit the receptionist call after you.")
     npcMon("Hey! I got something for you!", "Receptionist")
+    storyTeller("As you walk up to the counter the receptionist hands you a map.")
+    time.sleep(1)
+    npcMon("Here, take a look. Something tells me that you might need this.", "Receptionist")
+    playerMon("Thank you...")
+    time.sleep(1)
+    storyTeller("As you look at the map the receptionist gave you, from the side of your eye you catch something. A name you think you're familiar with but don't actually know...")
+    playerMon("!!!")
+    time.sleep(1)
+    storyTeller("This is your only chance. You think to yourself.")
+    playerMon("How can I get there?")
+    time.sleep(1)
+    npcMon("The thing is... it's really difficult even for seasoned hunters to get there...","Receptionist")
+    npcMon("It won't be a big problem.", "???")
+    time.sleep(1)
+    storyTeller("An old man sitting at one of the many tables the reception has spoke up.")
+    npcMon("I just wanted to sell my untrained Bottyamon to someone... I'll give it to you if you promise you tell me your tales when we next meet.", "Old man")
+    time.sleep(1)
+    playerMon("I gladly accept!")
+
 
 class BottyamonCmd(cmd.Cmd):
 

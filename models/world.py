@@ -25,7 +25,6 @@ class World:
         for _ in range(length):
             eventNum = random.randint(1,15)
             
-
             if shopPity >= 5:
                 events.append(1)
                 shopPity = 0
