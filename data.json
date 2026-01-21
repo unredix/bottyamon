@@ -1,8 +1,12 @@
 {
    "settings": {
-      "skip_intro": false,
-      "debug": true,
+      "skip_intro": true,
+      "debug": false,
       "language": "en"
    },
-   "saves": {}
+   "saves": {
+      "asd": {
+         "level": 3
+      }
+   }
 }

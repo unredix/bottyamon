@@ -51,6 +51,19 @@ def createWorld(name, length):
 
     return world
 
+def checkNewSave(saveName):
+    with open("data.json", "r") as file:
+        data = json.load(file)
+
+    for save in data["saves"]:
+        if saveName == save:
+            return False
+        
+    return True
+
+def loadSave(saveName):
+    rprint(saveName)
+
 def typeText(text, style, delay):
     for i in text:
         rprint(f"[{style}]{i}[/{style}]", end="", flush=True)
@@ -59,10 +72,18 @@ def typeText(text, style, delay):
 
 def storyTeller(text):
     typeText(f"[Story] {text}", "white", 0.05)
+
+def taskTeller(text):
+    typeText(f"[Task] {text}", "yellow", 0)
+
 def playerMon(text):
     typeText(f'[Player] "{text}"', "blue", 0.05)
+
 def npcMon(text, npcName):
     typeText(f'[{npcName}] "{text}"', "cyan", 0.05)
+
+def badUsage(text):
+    rprint(f"[black on red]{text}[/black on red]")
 
 def clearScreen():
     print("\033c", end="")
@@ -92,12 +113,13 @@ def playIntro():
     playerMon("How can I get there?")
     time.sleep(1)
     npcMon("The thing is... it's really difficult even for seasoned hunters to get there...","Receptionist")
-    npcMon("It won't be a big problem.", "???")
+    npcMon("I think I can help.", "???")
     time.sleep(1)
-    storyTeller("An old man sitting at one of the many tables the reception has spoke up.")
+    storyTeller("An old man sitting at one of the many tables in the reception, spoke up.")
     npcMon("I just wanted to sell my untrained Bottyamon to someone... I'll give it to you if you promise you tell me your tales when we next meet.", "Old man")
     time.sleep(1)
     playerMon("I gladly accept!")
+    time.sleep(5)
 
 
 class BottyamonCmd(cmd.Cmd):
@@ -128,10 +150,13 @@ class BottyamonCmd(cmd.Cmd):
     def __init__(self, completekey = "tab", stdin = None, stdout = None):
         super().__init__(completekey, stdin, stdout)
         self.console = Console()
-        self.current_world = object
+        self.current_world = None
+        self.bottyamon = None
+        self.battle = None
+        self.player = None
 
     def do_load(self, args):
-        """load [save]/[new] (save name)
+        """load save|new (save name)
         Loads a save or creates one"""
 
         if checkFile("data.json"):
@@ -140,24 +165,116 @@ class BottyamonCmd(cmd.Cmd):
         args = args.lower().split()
 
         if len(args) < 2:
-            self.console.print("[red]Bad usage. Try: load save|new (name)[/red]")
+            badUsage("Bad usage. Try: load save|new (name)")
             return
 
         if not args:
-            self.console.print("[red]You must give a save name or start a new save with [white]load new (name)[/white][/red]") 
+            badUsage("You must give a save name or start a new save with load new (name)")
             return
         if args[0] == "new":
             name = args[1]
             
-            self.current_world = createWorld(name, 30)
-            self.console.print("[green]New game started:[/green]", args[1])
-            
-            playIntro()
+            isDebugVar = isDebug("data.json")
 
+            if not checkNewSave(name):
+                badUsage("You already have a save named this.")
+                print("\nWould you like to load it? (y/n)")
+                choice = input().lower()
+
+                if choice == "y":
+                    loadSave(name)
+
+                    return
+                elif choice == "n":
+                    self.console.print("[yellow]Choose a different name then[/yellow]")
+                    return
+                else:
+                    badUsage('Different choice was made! Defaulting to "n"...')
+                    return
+            self.current_world = createWorld(name, 30)
+            
+            with open("data.json", "r") as file:
+                data = json.load(file)
+            
+            self.console.print("[green]New game started:[/green]", args[1])
+            if data["settings"]["skip_intro"] == True:
+                typeText("...", "green", 1)
+                if not isDebugVar:
+                    clearScreen()
+                self.console.print("\n[black on green]\nIntro Skipped\n[/black on green]\n")
+            else:
+                playIntro()
+            
+            npcMon("I haven't gave them a name, please give them one...", "Old man")
+            bottyamonName = ""
+            while True:
+                taskTeller("Give your Bottyamon a name: ")
+                bottyamonName = input()
+                if bottyamonName == "" or bottyamonName == " ":
+                    badUsage("You need to give a name to your Bottyamon!")
+                    pass
+                else:
+                    break
+            time.sleep(1.5)
+            playerMon(f"I should call you... {bottyamonName}!")
+            time.sleep(1.5)
+            npcMon("Great name choice! It's better than I've ever given!", "Old man")
+            time.sleep(1.5)
+            storyTeller("You start thinking about what names the old man could even give to his pets if the name you gave is considered really good...")
+            time.sleep(1.5)
+            npcMon("Now. This Bottyamon has an affinity to three types. Choose one now and train it good!", "Old man")
+            time.sleep(1.5)
+            taskTeller("Choose from one of these options:")
+            
+            types = ["Lightning", "Earth", "Water", "Gas", "Darkness", "Shadow", "Stone", "Fire"]
+            got = []
+            random.seed(self.current_world.seed)
+            if isDebugVar:
+                self.console.print(f"Debug: [yellow]Seed used for types[/yellow] {self.current_world.seed}")
+            while len(got) < 3:
+                a = random.choice(types)
+                if a in got:
+                    pass
+                else:
+                    got.append(a)
+            
+            styles = {
+                "Lightning": ":zap: Lightning",
+                "Earth": ":earth_africa: Earth",
+                "Water": ":ocean: Water",
+                "Gas": ":warning:  Gas",
+                "Darkness": ":new_moon: Darkness",
+                "Shadow": " :black_medium_square: Shadow",
+                "Stone": ":mountain:  Stone",
+                "Fire": ":fire: Fire"
+            }
+            counter = 1
+            for elem in got:
+                style = styles.get(elem, "[gray]???[/gray]")
+                self.console.print(f"\n{style} [{counter}]\n")
+                counter+=1
+            counter = 0
+            choice = None
+            while True:
+                try:
+                    choice = int(input())
+                except ValueError:
+                    badUsage("Only numbers allowed!")
+                    pass
+                if choice > 3 or choice < 1:
+                    badUsage("Only numbers 1-3!")
+                    pass
+                else:
+                    break
+            
+            bottyamonType = got[choice - 1]
+
+            time.sleep(1.5)
+            playerMon(f"I'll try to train {bottyamonName} the best I can as a {bottyamonType} type!")
         elif args[0] == "save":
             self.console.print ("[green]Loading save:[/green]", args[1])
         else:
-            self.console.print("[red]Bad usage. Try: load save|new (name)[/red]")
+            badUsage("Bad usage. Try: load save|new (name)")
     def do_quit(self, args):
         """quit
         Command to quit the game"""
@@ -175,11 +292,11 @@ class BottyamonCmd(cmd.Cmd):
         args = args.lower().split()
 
         if len(args) < 1 or not args:
-            self.console.print("[red]Bad usage. Try: settings list|(setting) true|false|(else)[/red]")
+            badUsage("Bad usage. Try: settings list|(setting) true|false|(else)")
             return
 
         if args[0] != "list" and len(args) < 2:
-            self.console.print("[red]Bad usage. Try: settings list|(setting) true|false|(else)[/red]")
+            badUsage("Bad usage. Try: settings list|(setting) true|false|(else)")
             return
         if args[0] == "list":
 
@@ -209,7 +326,7 @@ class BottyamonCmd(cmd.Cmd):
                         try:
                             new_value = bool_map[args[1].lower()]
                         except KeyError:
-                            self.console.print("[red]Only 'true' or 'false'[/red]")
+                            badUsage("Only 'true' or 'false'")
                             return
                         
                         data["settings"][key] = new_value
@@ -225,17 +342,17 @@ class BottyamonCmd(cmd.Cmd):
                 with open("data.json", "w") as file:
                     json.dump(data, file, indent=3)
             else:
-                self.console.print("[red]Setting not found[/red]")
+                badUsage("Setting not found")
     def do_debug(self, args):
         """debug (any)
         Command to help debug things"""
 
         if not isDebug("data.json"):
-            self.console.print("[red]You are not in debug mode![/red]")
+            badUsage("You are not in debug mode!")
             return
         
         if len(args) < 1:
-            self.console.print("[red]Must give debug option![/red]")
+            badUsage("Must give debug option!")
             return
         
         args = args.split()
@@ -243,7 +360,7 @@ class BottyamonCmd(cmd.Cmd):
         if args[0] == "check_seed":
             
             if len(args) < 3:
-                self.console.print("[red]Must give seed and length![/red]")
+                badUsage("Must give seed and length!")
                 return
             
             length = int(args[2])
@@ -281,7 +398,19 @@ class BottyamonCmd(cmd.Cmd):
                 
                 events.append(eventNum)
             
-            self.console.print(events)
+            types = ["Lightning", "Earth", "Water", "Gas", "Darkness", "Shadow", "Stone", "Fire"]
+            got = []
+            random.seed(seed)
+            while len(got) < 3:
+                a = random.choice(types)
+                if a in got:
+                    pass
+                else:
+                    got.append(a)
+
+
+            self.console.print(f"Events: {events}")
+            self.console.print(f"Types: {got}")
 
         if args[0] == "play_intro":
             playIntro()
