@@ -1,7 +1,7 @@
 {
    "settings": {
       "skip_intro": true,
-      "debug": false,
+      "debug": true,
       "language": "en"
    },
    "saves": {

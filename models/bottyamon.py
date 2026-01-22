@@ -9,7 +9,7 @@ class Bottyamon:
         self.rarity = "unknown"
         self.isEvo = False
 
-    def train(rebirths):
+    def train(self, rebirths):
         
         rebirthMultiplier = 1
         if rebirths > 0:

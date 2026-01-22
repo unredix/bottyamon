@@ -271,6 +271,19 @@ class BottyamonCmd(cmd.Cmd):
 
             time.sleep(1.5)
             playerMon(f"I'll try to train {bottyamonName} the best I can as a {bottyamonType} type!")
+
+            self.bottyamon = Bottyamon(bottyamonName, bottyamonType)
+            self.player = Player()
+            self.console.print("[green]A week later[/green]")
+
+            trainedStats = self.bottyamon.train(self.player.rebirths)
+
+            #TODO: Make it use seed 
+
+            playerMon(f"I finally managed to train you, {bottyamonName}")
+            self.console.print(f"The stats your Bottyamon got:\n\n[red]ATK[/red] :crossed_swords: : {trainedStats[0]}\n[blue]DEF[/blue] :shield: : {trainedStats[1]}\n\n:star: The rarity you got: [yellow]{trainedStats[2]}[/yellow]")
+
+
         elif args[0] == "save":
             self.console.print ("[green]Loading save:[/green]", args[1])
         else:

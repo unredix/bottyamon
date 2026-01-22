@@ -2,7 +2,7 @@ class Player:
     def __init__(self):
         self.lvl = 0
         self.xp = 0
-        self.rebiths = 0
+        self.rebirths = 0
         self.deaths = 0
         self.inventory = {}
         self.money = 20
