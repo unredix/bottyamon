@@ -1,7 +1,6 @@
 import random
 from rich import print as rprint #type:ignore
-
-class World:
+class World():
     def __init__(self, name):
         self.events = []
         self.name = name

@@ -1,6 +1,6 @@
 from .player import Player
 from .world import World
 from .bottyamon import Bottyamon
-from .battle import Battle
+from .events import Battle
 
 __all__ = [Player, World, Bottyamon, Battle]

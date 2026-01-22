@@ -6,7 +6,67 @@
    },
    "saves": {
       "asd": {
-         "level": 3
+         "Bottyamon": {
+            "name": "ALma",
+            "breed": "Lightning",
+            "baseAtk": 12,
+            "defense": 10,
+            "rarity": "B",
+            "isEvo": false
+         },
+         "World": {
+            "events": [
+               8,
+               15,
+               1,
+               6,
+               6,
+               8,
+               12,
+               10,
+               1,
+               7,
+               6,
+               6,
+               9,
+               15,
+               12,
+               1,
+               9,
+               5,
+               8,
+               11,
+               8,
+               1,
+               2,
+               7,
+               7,
+               13,
+               15,
+               8,
+               1,
+               3,
+               15,
+               8,
+               3,
+               1,
+               6,
+               9
+            ],
+            "name": "asd",
+            "seed": 73026,
+            "progress": 0,
+            "length": 30
+         },
+         "Player": {
+            "lvl": 0,
+            "xp": 0,
+            "rebirths": 0,
+            "deaths": 0,
+            "inventory": {},
+            "money": 20,
+            "upgrades": []
+         }
       }
    }
 }
