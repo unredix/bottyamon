@@ -168,7 +168,7 @@ def nextEvent(events, seed, progress):
 
         generatedItems = newShop.shopItems
 
-
+        
 
 class BottyamonCmd(cmd.Cmd):
 
@@ -556,10 +556,22 @@ class BottyamonCmd(cmd.Cmd):
 
             self.console.print(f"Bottyamon atk:{baseAtk}, def: {defense}")
 
-
-
         if args[0] == "play_intro":
             playIntro()
+
+        if args[0] == "gen_shop":
+            
+            if len(args) < 2:
+                badUsage("Must give seed!")
+                return
+
+            tryShop = Shop()
+            tryShop.generateShop(args[1])
+
+            self.console.print(f"Generated shop: {tryShop.shopItems}")
+
+    def mainGame(self):
+        nextEvent(self.current_world.seed)
 
 if __name__ == '__main__':
     BottyamonCmd().cmdloop()
