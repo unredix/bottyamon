@@ -9,7 +9,7 @@ from rich.table import Table # type: ignore
 from rich import print as rprint # type: ignore
 from rich.tree import Tree # type: ignore
 
-from models import Player, World, Battle, Bottyamon
+from models import Player, World, Battle, Shop, Bottyamon 
 
 def checkFile(file):
     dataFile = Path(file)
@@ -156,6 +156,20 @@ def playIntro():
     storyTeller("An old man sitting at one of the many tables in the reception, spoke up.")
     npcMon("I just wanted to sell my untrained Bottyamon to someone... I'll give it to you if you promise you tell me your tales when we next meet.", "Old man")
     playerMon("I gladly accept!")
+
+
+def nextEvent(events, seed, progress):
+
+    currentEvent = events[progress]
+
+    if currentEvent == 1:
+        newShop = Shop
+        newShop.generateShop(seed)
+
+        generatedItems = newShop.shopItems
+
+
+
 class BottyamonCmd(cmd.Cmd):
 
     intro = print(r"""    _____                                                                 _____ 

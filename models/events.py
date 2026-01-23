@@ -1,6 +1,5 @@
 import random
 
-
 class Battle:
     def __init__(self, player, bottyamon, enemy):
         self.player = player
@@ -17,9 +16,11 @@ class Shop:
 
         numOfItems = random.randint(3,8)
 
+        itemPrices = {self.possibleItems[0]:{10},self.possibleItems[1]:{15},self.possibleItems[2]:{10},self.possibleItems[3]:{15},self.possibleItems[4]:{10},self.possibleItems[5]:{15}, self.possibleItems[6]:{5}, self.possibleItems[7]:{5}}
+
         for _ in range(numOfItems):
             chosen = random.choice(self.possibleItems)
             amount = random.randint(1,4)
 
-            self.shopItems[chosen] = amount
+            self.shopItems[chosen]["amount"] = amount
         
