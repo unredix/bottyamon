@@ -9,12 +9,14 @@ class Player:
         self.upgrades = []
     
     def addItem(self, item, amount):
+        if item not in self.inventory:
+            self.inventory[item] = 0
         self.inventory[item] += amount
 
         return True
     
     def removeItem(self, item, amount):
-        if not self.inventory[item]:
+        if item not in self.inventory or not self.inventory[item]:
             return False
         
         if self.inventory[item] < amount:

@@ -9,7 +9,7 @@ from rich.table import Table # type: ignore
 from rich import print as rprint # type: ignore
 from rich.tree import Tree # type: ignore
 
-from models import Player, World, Battle, Shop, Bottyamon 
+from models import Player, World, Battle, Shop, SafePoint, Bottyamon 
 
 def checkFile(file):
     dataFile = Path(file)
@@ -166,8 +166,8 @@ def playIntro():
     storyTeller("As you look at the map the receptionist gave you, from the side of your eye you catch something. A name you think you're familiar with but don't actually know...")
     playerMon("!!!")
     storyTeller("This is your only chance. You think to yourself.")
-    playerMon("How can I get there?")
-    npcMon("The thing is... it's really difficult even for seasoned hunters to get there...","Receptionist")
+    playerMon("How can I get to *there*?")
+    npcMon("The thing is... it's really difficult even for seasoned hunters to get to *there*...","Receptionist")
     npcMon("I think I can help.", "???")
     storyTeller("An old man sitting at one of the many tables in the reception, spoke up.")
     npcMon("I just wanted to sell my untrained Bottyamon to someone... I'll give it to you if you promise you tell me your tales when we next meet.", "Old man")
@@ -207,6 +207,84 @@ class BottyamonCmd(cmd.Cmd):
         self.player = None
         self.isLoaded = False
         self.current_shop = None
+        self.current_savePoint = None
+
+    def nextEvent(self, progress):
+
+        currentEvent = self.current_world.events[progress]
+
+        rprint(f"\n[white on green]{progress + 1}. Day[/]\n")
+
+        if currentEvent == 1:
+            self.current_shop = Shop()
+            self.current_shop.generateShop()
+            generatedItems = self.current_shop.shopItems
+
+            storyTeller("As you walk out from a big forest's dark inside, your eyes catch something.")
+            playerMon("It's a Shop!")
+            storyTeller("You go and get closer to the Shop to see its offerings")
+
+            shopShow(generatedItems, self.player.money)
+            return True
+        
+        if currentEvent == 15:
+            self.current_savePoint = SafePoint()
+            self.current_savePoint.generateTrader()
+            data = self.current_savePoint.traderItem
+    
+            storyTeller("You notice a busy looking road next to your trail you were following. You decide to check it out.")
+            npcMon("Welcome!", "???")
+            storyTeller("On the side of the road a guard stood proudly.")
+            npcMon("Can I see some identification?", "Guard")
+            storyTeller("You hand your id to him.")
+            npcMon("It's alright, you might get thru.", "Guard")
+            storyTeller("As you walk to the big front gate of the Safe Point a trader approaches you...")
+            npcMon("Would you mind trading with me?", "Trader")
+            self.console.print("Would you like to see the traders offer? (y/n)")
+            choice = input()
+            while choice != "y" and choice != "n": 
+                badUsage("Only options: y/n")
+                choice = input().lower()
+            if choice == "y":
+                self.console.print(f"[blue][Trader] My offer is:[/] (You give) {data["name"]} --> (You get) {data["price"]} money")
+
+                self.console.print("[yellow]Do you accept this offer? (y/n)[/]")
+                choice = input()
+                while choice != "y" and choice != "n": 
+                    badUsage("Only options: y/n")
+                    choice = input().lower()
+
+                if choice == "y":
+                    success = self.player.removeItem(data["name"], 1)
+
+                    if success:
+                        npcMon("It was pleasure doing business with you!", "Trader")
+                        self.console.print(f"[red]-1 {data["name"]}[/]\n+{data['price']} money")
+                    else:
+                        badUsage("You don't have the necessary item!")
+                        npcMon("Too bad.", "Trader")
+
+                elif choice == "n":
+                    npcMon("Alright, lets meet again sometime!", "Trader")
+                
+            elif choice == "n":
+                npcMon("Lets meet again sometime.", "Trader")
+            
+            storyTeller("After you left the trader you go to the Safe Zones big gate.")
+            npcMon("Have a nice stay!", "Guard2")
+            typeText("...", "green bold", "1", isEnter=False)
+            self.bottyamon.hp = 100
+            self.console.print(f"[green]{self.bottyamon.name}'s health maxed![/]")
+
+        return False
+        
+    def mainGame(self):
+        while self.current_world.progress < self.current_world.length:
+            should_wait = self.nextEvent(self.current_world.progress)
+            if not should_wait:
+                self.current_world.progress += 1
+            else:
+                return
 
     def do_load(self, args):
         """load save|new (save name)
@@ -287,7 +365,7 @@ class BottyamonCmd(cmd.Cmd):
                 bottyamonName = input()
                 if bottyamonName == "" or bottyamonName == " ":
                     badUsage("You need to give a name to your Bottyamon!")
-                    pass
+                    continue
                 else:
                     break
             time.sleep(1)
@@ -391,6 +469,8 @@ class BottyamonCmd(cmd.Cmd):
                 self.console.print(f"Loaded save: W: {self.current_world.name} P: {self.player.lvl} B: {self.bottyamon.name}")
 
             self.console.print ("[green]Loading save:[/green]", args[1])
+
+            self.isLoaded = True
 
             self.mainGame()
         else:
@@ -591,7 +671,6 @@ class BottyamonCmd(cmd.Cmd):
             basketPrice = 0           
 
             for key, item in inBasket.items():
-                print(key, item)
                 basketPrice += int(definedItems[key]["price"]) * int(item)
 
             if money < basketPrice:
@@ -599,23 +678,38 @@ class BottyamonCmd(cmd.Cmd):
                 self.console.print("[yellow]Your basket has been emptied.[/]")
                 taskTeller("Place the items you want to buy once again in the basket!")
                 self.current_shop.basket = {}
+                return
             
             npcMon("Thank you for your purchase!", "Shopkeeper", isEnter=False)
             
             self.console.print(f"{len(inBasket.keys())} [green]item(s) added to your inventory![/]")
             self.player.money -= basketPrice
 
-            #TODO: Add to inv items and shit
-
+            for key, item in inBasket.items():
+                self.player.inventory[key] = item
+            
             self.console.print(f"[yellow]Your new balance:money_with_wings:: {self.player.money}[/]")
-
             self.current_shop = None
+
+            storyTeller("After putting your item(s) in your backpack, you go and look for a place to stay for the night.")
+            typeText("...", "green bold", 1, isEnter=False)
+
+            self.current_world.progress += 1
+            self.mainGame()
+
             return
         if args[0] == "cancel":
 
             self.current_shop = None
+            playerMon("Bye!")
+            npcMon("Have a nice day!", "Shopkeeper")
+            storyTeller("After going past the Shop, you go and look for a place to stay for the night.")
+            typeText("...", "green bold", 1, isEnter=False)
+
+            self.current_world.progress += 1
+            self.mainGame()
+
             return
-        
         if len(args) < 2:
             badUsage("You have to give an Id and an Amount!")
             return
@@ -638,29 +732,29 @@ class BottyamonCmd(cmd.Cmd):
             return
         
         return
+    
+    def do_inventory(self, args):
+        """inventory
+        Command to display your inventory"""
 
-    def nextEvent(self, progress):
+        if not self.isLoaded:
+            badUsage("No world is loaded!")
+            return
 
-        currentEvent = self.current_world.events[progress]
+        inv = self.player.inventory
 
-        rprint(f"\n[white on green]{progress + 1}. Day[/]\n")
+        table = Table(title="Inventory", show_lines=True)
+        table.add_column("Name", justify="right", style="cyan", no_wrap=True)
+        table.add_column("Amount", style="magenta")
 
-        if currentEvent == 1:
-            self.current_shop = Shop()
-            self.current_shop.generateShop()
-            generatedItems = self.current_shop.shopItems
+        for key, item in inv.items():
+            table.add_row(
+                key,
+                str(item)
+            )
 
-            storyTeller("As you walk out from a big forest's dark inside, your eyes catch something.")
-            playerMon("It's a Shop!")
-            storyTeller("You go and get closer to the Shop to see its offerings")
+        self.console.print(table)
 
-            shopShow(generatedItems, self.player.money)
-        
-    def mainGame(self):
-        
-        while self.current_world.progress < self.current_world.length:
-            self.nextEvent(self.current_world.progress)
-            self.current_world.progress += 1
     
 
 if __name__ == '__main__':

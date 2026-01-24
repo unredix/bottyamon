@@ -16,9 +16,9 @@
         "isEvo": false
       },
       "World": {
-        "events": [1],
-        "name": "asd",
-        "seed": 88625,
+        "events": [15],
+        "name": "debug",
+        "seed": 12345,
         "progress": 0,
         "length": 1
       },
@@ -28,7 +28,7 @@
         "rebirths": 0,
         "deaths": 0,
         "inventory": {},
-        "money": 2000,
+        "money": 10,
         "upgrades": []
       }
     }

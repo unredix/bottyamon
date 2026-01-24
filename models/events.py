@@ -26,3 +26,11 @@ class Shop:
             self.shopItems[chosen] = {"iid": counter,"amount":amount, "price":price}
 
             counter += 1
+
+class SafePoint:
+    def __init__(self):
+        self.traderItem = {}
+        self.possibleItems = ["Pickaxe", "Axe", "Rope", "Duck tape", "Flashlight"] 
+
+    def generateTrader(self):
+        self.traderItem= {"name": random.choice(self.possibleItems), "price": random.randint(5,20)}
