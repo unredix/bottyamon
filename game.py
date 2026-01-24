@@ -134,6 +134,22 @@ def badUsage(text):
 def clearScreen():
     print("\033c", end="")
 
+def shopShow(shop, playerMoney):
+    table = Table(title="Shop", show_lines=True)
+    table.add_column("Id", justify="right", style="cyan", no_wrap=True)
+    table.add_column("Item", style="magenta")
+    table.add_column("Stock", justify="right", style="yellow")
+    table.add_column("Price", justify="right", style="green")
+
+    for name, data in shop.items():
+        table.add_row(
+            str(data["iid"]),
+            name,
+            str(data["amount"]),
+            str(data["price"]),
+        )
+    rprint(table,f"\n[yellow]Your balance :money_with_wings:: {playerMoney}[/]\n\n[yellow]Help:[/]\nYou can buy items using: [blue bold]buy (id) (amount)[/]\nYou can checkout with [blue bold]buy checkout[/]\nOr you can cancel with: [blue bold]buy cancel[/]")
+
 def playIntro():
     time.sleep(1.5)
     typeText("...", "green", 1, False)
@@ -156,19 +172,6 @@ def playIntro():
     storyTeller("An old man sitting at one of the many tables in the reception, spoke up.")
     npcMon("I just wanted to sell my untrained Bottyamon to someone... I'll give it to you if you promise you tell me your tales when we next meet.", "Old man")
     playerMon("I gladly accept!")
-
-
-def nextEvent(events, seed, progress):
-
-    currentEvent = events[progress]
-
-    if currentEvent == 1:
-        newShop = Shop
-        newShop.generateShop(seed)
-
-        generatedItems = newShop.shopItems
-
-        
 
 class BottyamonCmd(cmd.Cmd):
 
@@ -203,6 +206,7 @@ class BottyamonCmd(cmd.Cmd):
         self.battle = None
         self.player = None
         self.isLoaded = False
+        self.current_shop = None
 
     def do_load(self, args):
         """load save|new (save name)
@@ -351,9 +355,9 @@ class BottyamonCmd(cmd.Cmd):
             time.sleep(1)
             storyTeller("Now that your Bottyamon is trained, you can go out in the wild and try to reach your destiny.")
             self.console.print("\n[white on green bold]And the game starts![/]\n")
+
+            self.mainGame()
             
-
-
         elif args[0] == "save":
             data = loadSave(args[1])
 
@@ -386,8 +390,9 @@ class BottyamonCmd(cmd.Cmd):
             if isDebug("data.json"):
                 self.console.print(f"Loaded save: W: {self.current_world.name} P: {self.player.lvl} B: {self.bottyamon.name}")
 
-
             self.console.print ("[green]Loading save:[/green]", args[1])
+
+            self.mainGame()
         else:
             badUsage("Bad usage. Try: load save|new (name)")
     def do_quit(self, args):
@@ -561,17 +566,102 @@ class BottyamonCmd(cmd.Cmd):
 
         if args[0] == "gen_shop":
             
-            if len(args) < 2:
-                badUsage("Must give seed!")
-                return
-
             tryShop = Shop()
-            tryShop.generateShop(args[1])
+            tryShop.generateShop()
 
             self.console.print(f"Generated shop: {tryShop.shopItems}")
 
+            shopShow(tryShop.shopItems)
+    def do_buy(self, args):
+
+        args = args.lower().split()
+
+        if self.current_shop == None:
+            badUsage("You're not at a shop!")
+            return
+        
+        if len(args) < 1:
+            badUsage("Needs argument!")
+            return
+
+        if args[0] == "checkout":
+            money = self.player.money
+            definedItems = self.current_shop.shopItems
+            inBasket = self.current_shop.basket
+            basketPrice = 0           
+
+            for key, item in inBasket.items():
+                print(key, item)
+                basketPrice += int(definedItems[key]["price"]) * int(item)
+
+            if money < basketPrice:
+                badUsage("You don't have enough money!")
+                self.console.print("[yellow]Your basket has been emptied.[/]")
+                taskTeller("Place the items you want to buy once again in the basket!")
+                self.current_shop.basket = {}
+            
+            npcMon("Thank you for your purchase!", "Shopkeeper", isEnter=False)
+            
+            self.console.print(f"{len(inBasket.keys())} [green]item(s) added to your inventory![/]")
+            self.player.money -= basketPrice
+
+            #TODO: Add to inv items and shit
+
+            self.console.print(f"[yellow]Your new balance:money_with_wings:: {self.player.money}[/]")
+
+            self.current_shop = None
+            return
+        if args[0] == "cancel":
+
+            self.current_shop = None
+            return
+        
+        if len(args) < 2:
+            badUsage("You have to give an Id and an Amount!")
+            return
+        
+        exists = False
+        for item, key in self.current_shop.shopItems.items():
+            if str(key["iid"]) == str(args[0]):
+                exists = True
+                if int(key["amount"]) < int(args[1]):
+                    npcMon("Sorry, I don't have that many on stock!", "Shopkeeper", isEnter=False)
+                    return
+
+                self.current_shop.basket[item] = args[1]
+                self.console.print(f"You added [yellow]{args[1]}[/] [blue]{item}[/] to your basket.")
+
+                break
+        
+        if not exists:
+            badUsage("The Id you provided doesn't exists!")
+            return
+        
+        return
+
+    def nextEvent(self, progress):
+
+        currentEvent = self.current_world.events[progress]
+
+        rprint(f"\n[white on green]{progress + 1}. Day[/]\n")
+
+        if currentEvent == 1:
+            self.current_shop = Shop()
+            self.current_shop.generateShop()
+            generatedItems = self.current_shop.shopItems
+
+            storyTeller("As you walk out from a big forest's dark inside, your eyes catch something.")
+            playerMon("It's a Shop!")
+            storyTeller("You go and get closer to the Shop to see its offerings")
+
+            shopShow(generatedItems, self.player.money)
+        
     def mainGame(self):
-        nextEvent(self.current_world.seed)
+        
+        while self.current_world.progress < self.current_world.length:
+            self.nextEvent(self.current_world.progress)
+            self.current_world.progress += 1
+    
 
 if __name__ == '__main__':
     BottyamonCmd().cmdloop()
