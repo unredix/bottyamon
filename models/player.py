@@ -6,7 +6,7 @@ class Player:
         self.deaths = 0
         self.inventory = {}
         self.money = 20
-        self.upgrades = []
+        self.effects = []
     
     def addItem(self, item, amount):
         if item not in self.inventory:
@@ -33,4 +33,16 @@ class Player:
         self.money += amount
 
         return True
+    
+    def addXp(self, xp):
+        if (self.xp + xp) >= 100:
+            self.lvl += 1
+            self.xp = 100 - (self.xp + xp)
+        
+            return True
+        
+        self.xp += xp
+        return False
+        
+
 

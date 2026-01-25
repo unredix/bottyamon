@@ -1,10 +1,17 @@
 import random
 
 class Battle:
-    def __init__(self, player, bottyamon, enemy):
+    def __init__(self, player, bottyamon):
         self.player = player
         self.bottyamon = bottyamon
-        self.enemy = enemy
+        self.enemy = []
+
+    def genEnemy(self):
+        name = random.choice(["Spider", "Ork", "Wild Cat", "Goblin", "Golem", "Ghost"])
+        enemyType = random.choice(["Lightning", "Earth", "Water", "Gas", "Darkness", "Shadow", "Stone", "Fire"])
+        isSpecial = random.choice([True, False])
+
+        self.enemy = [name, enemyType, isSpecial]
 
 class Shop:
     def __init__(self):

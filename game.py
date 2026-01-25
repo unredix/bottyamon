@@ -97,7 +97,7 @@ def save(Bottyamon, Player, World):
             "deaths": Player.deaths,
             "inventory": Player.inventory,
             "money": Player.money,
-            "upgrades": Player.upgrades
+            "effects": Player.effects
         }
     }
 
@@ -149,6 +149,115 @@ def shopShow(shop, playerMoney):
             str(data["price"]),
         )
     rprint(table,f"\n[yellow]Your balance :money_with_wings:: {playerMoney}[/]\n\n[yellow]Help:[/]\nYou can buy items using: [blue bold]buy (id) (amount)[/]\nYou can checkout with [blue bold]buy checkout[/]\nOr you can cancel with: [blue bold]buy cancel[/]")
+
+def applyEffect(type, effects):
+    if type == "dmg":
+        if "Strength Potion (+3)" in effects:
+            return 3  
+        
+        if "Strength Potion (+5)" in effects:
+            return 5
+
+        return 0
+    if type == "def":
+        if "Defense Potion (+5)" in effects:
+            return 5
+        if "Defense Potion (+8)" in effects:
+            return 8
+
+        return 0
+    if type == "hp":
+        if "HP Potion (+5)" in effects:
+            return 5
+        if "HP Potion (+8)" in effects:
+            return 8
+
+        return 0
+def fight(bottyamon, player, enemyHp, enemy, NumOfRound=1, overallDmg = 0):
+        strengths = {
+            "Fire":      ["Earth", "Gas"],
+            "Water":     ["Fire", "Stone"],
+            "Stone":     ["Shadow", "Earth"],
+            "Shadow":    ["Fire"],
+            "Lightning": ["Water", "Shadow"],
+            "Gas":       ["Lightning"],
+            "Earth":     ["Water", "Lightning"],
+            "Darkness":  ["Fire", "Water", "Stone", "Earth", "Lightning", "Gas", "Shadow"]
+        }
+
+        weaknesses = {
+            "Fire":      ["Water", "Shadow"],
+            "Water":     ["Lightning", "Earth"],
+            "Stone":     ["Water"],
+            "Shadow":    ["Stone", "Lightning"],
+            "Lightning": ["Earth", "Gas"],
+            "Gas":       ["Fire"],
+            "Earth":     ["Fire", "Stone"],
+            "Darkness": []
+        }
+
+        enemyDef = random.randint(1,10)
+
+        playerTypeEffect = 1
+        enemyTypeEffect = 1
+
+        if enemy[1] in weaknesses[bottyamon.breed]:
+            playerTypeEffect = 1.35
+        if enemy[1] in strengths[bottyamon.breed]:
+            enemyTypeEffect = 1.35
+
+        time.sleep(1)
+        rprint(f"[black on white]Round: {NumOfRound}[/]")
+        time.sleep(1)
+        rprint(f"[yellow]{bottyamon.name}[/] attacks!")
+        time.sleep(3)
+        finalAttack = (bottyamon.baseAtk + applyEffect("dmg", player.effects)) * playerTypeEffect
+        trueDmg = int(finalAttack - enemyDef)
+
+        overallDmg += trueDmg
+
+        rprint(f"[green bold]You did :crossed_swords: :[yellow] {trueDmg}[/] dmg![/]")
+        time.sleep(1)
+        if trueDmg >= enemyHp:
+            rprint(f"\nResults:\n[green bold]You defeated: {enemy[0]}![/]\n[blue bold]Overall dmg: {overallDmg}[/]\n[red bold]Remaining hp: {bottyamon.hp}[/]")
+            return [True, overallDmg]
+        enemyHp -= trueDmg
+        rprint(f"Remaining health of enemy: {enemyHp}")
+
+        time.sleep(1)
+        rprint("[yellow]Will you try to dodge? (50% success) (y/n)[/]")
+        choice = input().lower()
+        while choice != "y" and choice != "n":
+            badUsage("Only y/n options!")
+            choice = input().lower()
+
+        success = random.choice([True, False])
+
+        finalAttack = (random.randint(10, 15) * enemyTypeEffect) * round(random.uniform(1, 1.5), 2) 
+        trueDmg = int(finalAttack - bottyamon.defense + applyEffect("def", player.effects))
+
+        rprint(f"[yellow]{enemy[0]}[/] attacks!")
+
+        if choice == "y" and not success:
+            rprint("[red]Your dodge attempt failed! The dmg got x2![/]")
+            trueDmg = trueDmg * 2
+        
+        if choice == "y" and success:
+            rprint(f"[green bold]You dodged a {trueDmg} dmg attack![/]")
+
+        else:
+            rprint(f"[yellow bold]{enemy[0]} did {trueDmg} dmg to you![/]")
+            time.sleep(1)
+            if trueDmg >= bottyamon.hp:
+                
+                rprint(f"\nResults:\n[red bold]You lost![/]\n[blue bold]Overall dmg: {overallDmg}[/]\n[red bold]Enemy HP: {enemyHp}[/]")
+                return [False, overallDmg, enemyHp]
+            bottyamon.hp -= trueDmg
+            rprint(f"Your health: [red]{bottyamon.hp}[/]")
+
+        return fight(bottyamon, player, enemyHp, enemy, NumOfRound + 1, overallDmg)
+        
+
 
 def playIntro():
     time.sleep(1.5)
@@ -208,6 +317,7 @@ class BottyamonCmd(cmd.Cmd):
         self.isLoaded = False
         self.current_shop = None
         self.current_savePoint = None
+        self.current_battle = None
 
     def nextEvent(self, progress):
 
@@ -259,7 +369,7 @@ class BottyamonCmd(cmd.Cmd):
 
                     if success:
                         npcMon("It was pleasure doing business with you!", "Trader")
-                        self.console.print(f"[red]-1 {data["name"]}[/]\n+{data['price']} money")
+                        self.console.print(f"[red]- 1 {data["name"]}[/]\n[green]+ {data['price']} money[/]")
                     else:
                         badUsage("You don't have the necessary item!")
                         npcMon("Too bad.", "Trader")
@@ -271,10 +381,63 @@ class BottyamonCmd(cmd.Cmd):
                 npcMon("Lets meet again sometime.", "Trader")
             
             storyTeller("After you left the trader you go to the Safe Zones big gate.")
-            npcMon("Have a nice stay!", "Guard2")
-            typeText("...", "green bold", "1", isEnter=False)
+            npcMon("Have a nice stay!", "Guard 2")
+            typeText("...", "green bold", 1, isEnter=False)
             self.bottyamon.hp = 100
             self.console.print(f"[green]{self.bottyamon.name}'s health maxed![/]")
+
+            self.current_savePoint = None
+
+            return False
+        
+        if currentEvent in [2,3,4,5]:
+            self.current_battle = Battle(self.player, self.bottyamon)
+            self.current_battle.genEnemy()
+            enemy = self.current_battle.enemy
+
+            meetType = random.randint(1,3)
+
+            if meetType == 1:
+                storyTeller("As you wonder in the woods of the big forest, which you decided to go thru as a shortcut, a large something is coming towards you.")
+                playerMon("!!!")
+                storyTeller(f"It's a {enemy[0]}!")
+
+            if meetType == 2:
+                storyTeller("You're climbing a mountain in order to get to its other side, but your feet slips on one of the small rocks. As you try to regain your consciousness you see something strange before your eyes.")
+                playerMon("!!!")
+                storyTeller(f"It's a {enemy[0]}!")
+            
+            if meetType == 3:
+                storyTeller("When you wake up you usually look around really carefully before proceeding to continue your journey. This time it really came in use as you did your morning routine.")
+                playerMon("!!!")
+                storyTeller("At a nearby tree you see something...")
+                playerMon(f"A {enemy[0]}!")
+            
+            self.console.print("\n[black on yellow bold]BATTLE TIME![/]\n")
+            enemyHp = random.randint(50,100)
+            self.console.print(f"[gray]The enemy:\n[/][yellow]Type: {enemy[1]}[/]\n[red]Health: {enemyHp}[/]\n")
+            self.console.print(f"[gray]You:\n[/][yellow]Type: {self.bottyamon.breed}[/]\n[red]Health: {self.bottyamon.hp}[/]\n")
+
+            results = fight(self.bottyamon, self.player, enemyHp, enemy)
+
+            if results[0] == True:
+                rewards = [round((results[1] * 0.25)), results[1]]
+                self.console.print(f"\nRewards:\n:money_with_wings: {rewards[0]}\nxp {rewards[1]}\n")
+                self.player.addXp(rewards[0])
+                self.player.addMoney(rewards[1])
+                
+            if results[0] == False:
+                self.console.print(f"You lost:\n:money_with_wings: -{results[2]}")
+                if self.player.money - results[2] < 0:
+                    self.player.money = 0
+                else:
+                    self.player.money -= results[2]
+
+        if currentEvent == 6:
+            storyTeller("You woke up at night after a long day of walking in a big wheat farm as you heard a shout from the distance.")
+            playerMon("Might as well check it out...")
+        
+        #TODO: Do rest
 
         return False
         
@@ -328,7 +491,7 @@ class BottyamonCmd(cmd.Cmd):
                     self.player.deaths = data["Player"]["deaths"]
                     self.player.inventory = data["Player"]["inventory"]
                     self.player.money = data["Player"]["money"]
-                    self.player.upgrades = data["Player"]["upgrades"]
+                    self.player.effects = data["Player"]["effects"]
 
                     self.current_world = World(data["World"]["name"])
                     self.current_world.events = data["World"]["events"]
@@ -336,6 +499,7 @@ class BottyamonCmd(cmd.Cmd):
                     self.current_world.length = data["World"]["length"]
                     self.current_world.progress = data["World"]["progress"]
 
+                    self.mainGame()
                     return
                 elif choice == "n":
                     self.console.print("[yellow]Choose a different name then[/yellow]")
@@ -456,7 +620,7 @@ class BottyamonCmd(cmd.Cmd):
             self.player.deaths = data["Player"]["deaths"]
             self.player.inventory = data["Player"]["inventory"]
             self.player.money = data["Player"]["money"]
-            self.player.upgrades = data["Player"]["upgrades"]
+            self.player.effects = data["Player"]["effects"]
 
             self.current_world = World(data["World"]["name"])
             self.current_world.events = data["World"]["events"]

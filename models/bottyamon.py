@@ -21,21 +21,16 @@ class Bottyamon:
 
 
         self.baseAtk = round(random.randint(5, 15) * rebirthMultiplier)
-        self.defense = round(random.randint(10, 20) * rebirthMultiplier)
-
-        # rating < 20 --> C
-        # 20 <= rating < 30 --> B
-        # rating > 30 --> A  
-        # rating >= 35 --> S
+        self.defense = round(random.randint(1, 10) * rebirthMultiplier)
 
         rating = (self.baseAtk + self.defense)
         rarity = "C"
 
-        if rating >= 20 and rating < 30:
+        if rating >= 10 and rating < 15:
             rarity = "B"
-        elif rating >= 30 and rating < 35:
+        elif rating >= 15 and rating < 20:
             rarity = "A"
-        elif rating >= 35:
+        elif rating >= 21:
             rarity = "S"
 
         self.rarity = rarity
