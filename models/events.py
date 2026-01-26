@@ -16,7 +16,7 @@ class Battle:
 class Shop:
     def __init__(self):
         self.shopItems = {}
-        self.possibleItems = ["Strength Potion (+3)", "Strength Potion (+5)", "Defense Potion (+5)", "Defense Potion (+8)", "HP Potion (+5)", "HP Potion (+8)", "Pickaxe", "Axe", "Retrain pill", "Rope", "Duck tape", "Flashlight"] 
+        self.possibleItems = ["Strength Potion (+3)", "Strength Potion (+5)", "Defense Potion (+5)", "Defense Potion (+8)", "HP Potion (+25)", "HP Potion (+50)", "Pickaxe", "Axe", "Retrain pill", "Rope", "Duck tape", "Flashlight"] 
         self.basket = {}
 
     def generateShop(self):

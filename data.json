@@ -1,42 +1,111 @@
 {
-  "settings": {
-    "skip_intro": false,
-    "debug": true,
-    "language": "en"
-  },
-  "saves": {
-    "debug": {
-      "Bottyamon": {
-        "name": "Koli",
-        "breed": "Fire",
-        "baseAtk": 100,
-        "defense": 10,
-        "hp": 100,
-        "rarity": "A",
-        "isEvo": false
+   "settings": {
+      "skip_intro": false,
+      "debug": false,
+      "language": "en"
+   },
+   "saves": {
+      "debug": {
+         "Bottyamon": {
+            "name": "Koli",
+            "breed": "Fire",
+            "baseAtk": 100,
+            "defense": 10,
+            "hp": 100,
+            "rarity": "A",
+            "isEvo": false
+         },
+         "World": {
+            "events": [
+               2,
+               3,
+               4,
+               4
+            ],
+            "name": "debug",
+            "seed": 12345,
+            "progress": 0,
+            "length": 4
+         },
+         "Player": {
+            "lvl": 0,
+            "xp": 0,
+            "rebirths": 0,
+            "deaths": 0,
+            "inventory": {
+               "Rope": 1,
+               "Duck tape": 1,
+               "Flashlight": 1,
+               "Axe": 1,
+               "Pickaxe": 1
+            },
+            "money": 10,
+            "effects": []
+         }
       },
-      "World": {
-        "events": [2, 3, 4, 4],
-        "name": "debug",
-        "seed": 12345,
-        "progress": 0,
-        "length": 4
-      },
-      "Player": {
-        "lvl": 0,
-        "xp": 0,
-        "rebirths": 0,
-        "deaths": 0,
-        "inventory": {
-          "Rope": 1,
-          "Duck tape": 1,
-          "Flashlight": 1,
-          "Axe": 1,
-          "Pickaxe": 1
-        },
-        "money": 10,
-        "effects": []
+      "alma": {
+         "Bottyamon": {
+            "name": "Sanyika",
+            "breed": "Darkness",
+            "baseAtk": 8,
+            "defense": 8,
+            "hp": 16,
+            "rarity": "A",
+            "isEvo": false
+         },
+         "World": {
+            "events": [
+               4,
+               8,
+               5,
+               15,
+               8,
+               1,
+               8,
+               10,
+               11,
+               3,
+               4,
+               1,
+               14,
+               2,
+               15,
+               5,
+               12,
+               1,
+               15,
+               12,
+               7,
+               8,
+               9,
+               1,
+               12,
+               14,
+               14,
+               14,
+               6,
+               1,
+               10,
+               15,
+               13,
+               1,
+               9,
+               8
+            ],
+            "name": "alma",
+            "seed": 23226,
+            "progress": 1,
+            "length": 30
+         },
+         "Player": {
+            "lvl": 0,
+            "xp": 0,
+            "rebirths": 0,
+            "deaths": 0,
+            "inventory": {},
+            "money": 0,
+            "effects": []
+         }
       }
-    }
-  }
+   }
 }

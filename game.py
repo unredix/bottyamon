@@ -167,9 +167,9 @@ def applyEffect(type, effects):
 
         return 0
     if type == "hp":
-        if "HP Potion (+5)" in effects:
+        if "HP Potion (+25)" in effects:
             return 5
-        if "HP Potion (+8)" in effects:
+        if "HP Potion (+50)" in effects:
             return 8
 
         return 0
@@ -233,7 +233,7 @@ def fight(bottyamon, player, enemyHp, enemy, NumOfRound=1, overallDmg = 0):
 
         success = random.choice([True, False])
 
-        finalAttack = (random.randint(10, 15) * enemyTypeEffect) * round(random.uniform(1, 1.5), 2) 
+        finalAttack = (random.randint(5, 10) * enemyTypeEffect) * round(random.uniform(1, 1.5), 2) 
         trueDmg = int(finalAttack - bottyamon.defense + applyEffect("def", player.effects))
 
         rprint(f"[yellow]{enemy[0]}[/] attacks!")
@@ -303,6 +303,7 @@ class BottyamonCmd(cmd.Cmd):
     Load save: load save (save name)
     Start new game: load new (save name)
     Settings: settings list|(setting) true|false|(else)
+    Next day: next
     Exit game: quit
                                               """)
     prompt = "> "
@@ -318,6 +319,7 @@ class BottyamonCmd(cmd.Cmd):
         self.current_shop = None
         self.current_savePoint = None
         self.current_battle = None
+        self.waiting_for_next = True
 
     def nextEvent(self, progress):
 
@@ -418,13 +420,91 @@ class BottyamonCmd(cmd.Cmd):
             self.console.print(f"[gray]The enemy:\n[/][yellow]Type: {enemy[1]}[/]\n[red]Health: {enemyHp}[/]\n")
             self.console.print(f"[gray]You:\n[/][yellow]Type: {self.bottyamon.breed}[/]\n[red]Health: {self.bottyamon.hp}[/]\n")
 
+            self.console.print("\n[cyan]Would you like to use a potion before the battle? (y/n)[/]")
+            choice = input().lower()
+            while choice != "y" and choice != "n":
+                badUsage("Only y/n options!")
+                choice = input().lower()
+            
+            if choice == "y":
+                available_potions = []
+                potion_list = [
+                    "Strength Potion (+3)",
+                    "Strength Potion (+5)",
+                    "Defense Potion (+5)",
+                    "Defense Potion (+8)",
+                    "HP Potion (+25)",
+                    "HP Potion (+50)"
+                ]
+                
+                for potion in potion_list:
+                    if potion in self.player.inventory:
+                        available_potions.append(potion)
+                
+                if not available_potions:
+                    self.console.print("[red]You don't have any potions![/]")
+                else:
+                    self.console.print("\n[yellow]Available potions:[/]")
+                    for idx, potion in enumerate(available_potions, 1):
+                        self.console.print(f"[cyan]{idx}.[/] {potion} (x{self.player.inventory[potion]})")
+                    
+                    self.console.print("[cyan]0.[/] Cancel")
+                    
+                    while True:
+                        try:
+                            potion_choice = int(input("\nSelect a potion number: "))
+                            if potion_choice == 0:
+                                self.console.print("[yellow]Cancelled.[/]")
+                                break
+                            elif potion_choice >= 1 and potion_choice <= len(available_potions):
+                                selected_potion = available_potions[potion_choice - 1]
+                                
+                                success = self.player.removeItem(selected_potion, 1)
+                                if success:
+                                    self.player.effects.append(selected_potion)
+                                    self.console.print(f"[green]Used {selected_potion}![/]")
+                                    
+                                    if "HP Potion" in selected_potion:
+                                        hp_boost = applyEffect("hp", [selected_potion])
+                                        self.bottyamon.hp = min(100, self.bottyamon.hp + hp_boost)
+                                        self.console.print(f"[green]HP restored! Current HP: {self.bottyamon.hp}[/]")
+                                break
+                            else:
+                                badUsage(f"Please enter a number between 0 and {len(available_potions)}")
+                        except (ValueError, TypeError):
+                            badUsage("Please enter a valid number!")
+            
+            self.console.print()
+
             results = fight(self.bottyamon, self.player, enemyHp, enemy)
 
             if results[0] == True:
                 rewards = [round((results[1] * 0.25)), results[1]]
                 self.console.print(f"\nRewards:\n:money_with_wings: {rewards[0]}\nxp {rewards[1]}\n")
-                self.player.addXp(rewards[0])
+                didLvlUp = self.player.addXp(rewards[0])
                 self.player.addMoney(rewards[1])
+
+                if didLvlUp:
+                    self.console.print(f"[green bold]Lvl up! You're now lvl {self.player.lvl}![/]")
+
+                    lvluprewards = {5: "Evolve chance", 10 : "Strength Potion (+3)", 15: "Retrain pill", 20: "Evolve chance"}
+                    reward = lvluprewards[self.player.lvl]
+
+                    if reward:
+                        if reward != "Evolve chance":
+                            self.console.print(f"[green]Reward: {reward}[/]")
+                            self.console.print(f"+ 1 {reward}")
+                            self.player.addItem(reward, 1)
+                        else:
+                            self.console.print("[yellow bold]:star: You got a chance to evolve![/]")
+                            time.sleep(2)
+                            isEvoVar = random.choice([True, False])
+
+                            if isEvoVar:
+                                self.console.print("[green]You successfully evolved your bottyamon![/]")
+                                self.bottyamon.isEvo = True
+                            else:
+                                self.console.print("[red]Your evolvement of your Bottyamon failed![/]")
                 
             if results[0] == False:
                 self.console.print(f"You lost:\n:money_with_wings: -{results[2]}")
@@ -433,19 +513,311 @@ class BottyamonCmd(cmd.Cmd):
                 else:
                     self.player.money -= results[2]
 
-        if currentEvent == 6:
+        if currentEvent in [6, 7]:
             storyTeller("You woke up at night after a long day of walking in a big wheat farm as you heard a shout from the distance.")
             playerMon("Might as well check it out...")
-        
-        #TODO: Do rest
 
+            self.console.print("[yellow]Will you use a flashlight? (y/n)[/]")
+            usedItem = False
+
+            choice = input()
+            while choice != "y" and choice != "n": 
+                badUsage("Only options: y/n")
+                choice = input().lower()
+
+            if choice == "y":
+                success = self.player.removeItem("Flashlight", 1)
+
+                if not success:
+                    badUsage("You don't have a Flashlight!")
+
+                else:
+                    self.console.print("[red]- 1 Flashlight[/]")
+                    usedItem = True
+            
+            storyTeller("As you try to go towards the shout you see something in the dark.")
+
+            if usedItem:
+                storyTeller("When you point your flashlight at that something it starts to move.")
+                playerMon("It's a monster!")
+                storyTeller("You throw the flashlight in a bush as you start to run back to your camp. The monster doesn't seem to follow you...")
+            else:
+                storyTeller("When you try to get closer to the thing in the dark to get a better look at it, it moved.")
+                playerMon("!!!")
+                storyTeller("You start running as fast as you can but that something is running after you.")
+                playerMon("Get away from me!")
+                doHit = random.choice([True, False])
+
+                if doHit:
+                    storyTeller("The something got closer and closer until it reached your leg. With its sharp teeth it bit you.")
+                    playerMon("Agh!")
+                    self.console.print("[red]- 10 hp [/]")
+                    
+                    if self.bottyamon.hp - 10 <= 0:
+                        self.console.print("\n[red bold] You died! [/]\nPenalty: -20 :money_with_wings:\n")
+                    else:
+                        self.bottyamon.hp -= 10
+                
+                else:
+                    storyTeller("With a kick backwards you manage to hit it. The something don't follow you anymore.")
+                    playerMon("What was that...")
+
+        if currentEvent in [8,9]:
+            storyTeller("Next to a cliff side you hear something...")
+            npcMon("Help me!", "???")
+            npcMon("Someone help me please!", "???")
+
+            storyTeller("You look down and see a middle age man shouting up from a small edge of the hill.")
+            playerMon("Hey! I think I can help you!")
+
+            self.console.print("[yellow]Will you use a Rope? (y/n)[/]")
+            usedItem = False
+
+            choice = input()
+            while choice != "y" and choice != "n": 
+                badUsage("Only options: y/n")
+                choice = input().lower()
+
+            if choice == "y":
+                success = self.player.removeItem("Rope", 1)
+
+                if not success:
+                    badUsage("You don't have a Rope!")
+
+                else:
+                    self.console.print("[red]- 1 Rope[/]")
+                    usedItem = True
+            
+            if usedItem:
+                storyTeller("You get your rope out of your backback and you start to lower it for him.")
+                playerMon("Grab it!")
+                npcMon("I'll try!", "Man")
+                storyTeller("The stranger grabbed the robe and you pulled him up.")
+                npcMon("Thank you very much!", "Man")
+                self.console.print("[green]As a reward for your efforts you get 20 :money_with_wings:.[/]")
+                self.player.addMoney(20)
+            else:
+                storyTeller("You get on your stomach and offer your hand to him!")
+                playerMon("Here! Try grabbing it!")
+                isFail = random.choice([True, False])
+                if isFail:
+                    storyTeller("As you try to pull him up, your hand slips...")
+                    playerMon("!!!")
+                    storyTeller("The stranger you met just a minute ago has fallen into the darks of the hillside...")
+                
+                else:
+                    storyTeller("You start to pull up him!")
+                    playerMon("Almost there!")
+                    storyTeller("You successfully pulled the stranger up!")
+                    npcMon("Thank you very much for your help!", "Man")
+                    self.console.print("[green]As a reward for your help the Man gave you 10 :money_with_wings:!")
+                    self.player.addMoney(10)
+
+        if currentEvent in [10, 11]:
+            storyTeller("You're in going thru a small village when you come across a crowd forming at one of the shops.")
+            playerMon("What happened?")
+            npcMon("The fish bowl the shopkeeper used to store still alive fish has a crack on it and they're trying to figure out what to do.", "Bystander")
+            playerMon("I think I can help!")
+            storyTeller("You go directly to the shopkeeper and ask if you can help figure out the problem.")
+            playerMon("Hello! I think I have a solution!")
+            npcMon("Really son? Then out with it!", "Shopkeeper")
+            
+            self.console.print("[yellow]Will you use Duck Tape? (y/n)[/]")
+            usedItem = False
+
+            choice = input()
+            while choice != "y" and choice != "n": 
+                badUsage("Only options: y/n")
+                choice = input().lower()
+
+            if choice == "y":
+                success = self.player.removeItem("Duck tape", 1)
+
+                if not success:
+                    badUsage("You don't have Duck Tape!")
+
+                else:
+                    self.console.print("[red]- 1 Duck Tape[/]")
+                    usedItem = True
+            
+            if usedItem:
+                storyTeller("The shopkeepers eyes widened as you pulled a piece of duck tape form your backpack...")
+                npcMon("AND WHAT WOULD THAT DO!?", "Shopkeeper")
+                playerMon("Now, now... Just look and see the magic!")
+                storyTeller("You placed the Duck Tape on the leaking bowl.")
+                npcMon("!!!", "Shopkeeper")
+                storyTeller("The leak stopped on an instant.")
+                playerMon("I told you!")
+                self.console.print("[green]As a reward for your help the Shopkeeper gave you 15 :money_with_wings:![/]")
+                self.player.addMoney(15)
+            else:
+                storyTeller("You look at the bowl carefully and start thinking about a solution.")
+                playerMon("Hmm... Maybe I can seal it with something from nature...")
+                storyTeller("You go outside and find some tree resin on a nearby tree. You apply it carefully to the crack.")
+                npcMon("I don't really trust you with this one...", "Shopkeeper")
+                playerMon("Lets just see...")
+                isSuccess = random.choice([True, False])
+                
+                if isSuccess:
+                    storyTeller("To everyone's amazement, the resin hardens and the leak stops completely!")
+                    npcMon("You're a genius! Thank you!", "Shopkeeper")
+                    self.console.print("[green]As a reward for your creative solution, the Shopkeeper gave you 10 :money_with_wings:![/]")
+                    self.player.addMoney(10)
+                else:
+                    storyTeller("The resin doesn't hold and the bowl continues to leak...")
+                    playerMon("Oh no...")
+                    npcMon('YEAH, "OH NO"!', "Shopkeeper")
+                    storyTeller("The shopkeeper chased you away with a fish...")
+
+        if currentEvent == 12:
+            storyTeller("You encounter a massive stone wall blocking a mountain pass.")
+            playerMon("There must be a way through...")
+            storyTeller("You notice the wall appears to have weak points that could be broken.")
+            
+            self.console.print("[yellow]Will you use a Pickaxe to break through? (y/n)[/]")
+            usedItem = False
+
+            choice = input()
+            while choice != "y" and choice != "n": 
+                badUsage("Only options: y/n")
+                choice = input().lower()
+
+            if choice == "y":
+                success = self.player.removeItem("Pickaxe", 1)
+
+                if not success:
+                    badUsage("You don't have a Pickaxe!")
+
+                else:
+                    self.console.print("[red]- 1 Pickaxe[/]")
+                    usedItem = True
+            
+            if usedItem:
+                storyTeller("You swing the Pickaxe with all your power against the weak point!")
+                playerMon("Break already!")
+                storyTeller("Rocks crumble and fall, creating an opening in the wall.")
+                playerMon("Yes! I made it through!")
+                self.console.print("[green]You broke through the wall! +25 :money_with_wings:[/]")
+                self.player.addMoney(25)
+            else:
+                storyTeller("You search for another way around the wall.")
+                playerMon("There has to be a way...")
+                storyTeller("After careful exploration, you find a narrow path along the side of the mountain.")
+                isFound = random.choice([True, False])
+                
+                if isFound:
+                    storyTeller("The path is treacherous but passable. You carefully make your way across.")
+                    playerMon("Got it!")
+                    self.console.print("[green]You found an alternate route! +15 :money_with_wings:[/]")
+                    self.player.addMoney(15)
+                else:
+                    storyTeller("The path is too dangerous and unstable. You have to find another route.")
+                    playerMon("...")
+                    storyTeller("You spend extra time finding your way around.")
+
+        if currentEvent == 13:
+            storyTeller("You come across a dense forest with overgrown vegetation blocking your path.")
+            playerMon("This is getting in my way...")
+            storyTeller("The vines and branches are too thick to push through easily.")
+            
+            self.console.print("[yellow]Will you use an Axe to clear the path? (y/n)[/]")
+            usedItem = False
+
+            choice = input()
+            while choice != "y" and choice != "n": 
+                badUsage("Only options: y/n")
+                choice = input().lower()
+
+            if choice == "y":
+                success = self.player.removeItem("Axe", 1)
+
+                if not success:
+                    badUsage("You don't have an Axe!")
+
+                else:
+                    self.console.print("[red]- 1 Axe[/]")
+                    usedItem = True
+            
+            if usedItem:
+                storyTeller("You swing the Axe efficiently, cutting through the dense vegetation.")
+                playerMon("Why is it so dense?")
+                storyTeller("You carve a clear path through the forest, and in doing so, discover a hidden area.")
+                playerMon("And what is this?")
+                storyTeller("You open the chest.")
+                
+                self.console.print("[green]The chest had 20 :money_with_wings:![/]")
+                self.player.addMoney(20)
+            else:
+                storyTeller("You carefully squeeze through the dense vegetation without cutting it.")
+                playerMon("Slowly... slowly...")
+                storyTeller("It's a tight squeeze, but you manage to navigate through the overgrown forest.")
+                isMade = random.choice([True, False])
+                
+                if isMade:
+                    storyTeller("You finally emerge on the other side, exhausted but unharmed.")
+                    playerMon("Made it!")
+                else:
+                    storyTeller("The vegetation becomes increasingly entangled, and you get stuck.")
+                    playerMon("I'm stuck!")
+                    storyTeller("After struggling for a while, you manage to break free and find another way around the forest.")
+                    playerMon("Finally... free...")
+
+        if currentEvent == 14:
+            storyTeller("You discover an abandoned mine with glimmering ore in the walls.")
+            playerMon("Is that... valuable ore?")
+            storyTeller("The ore looks precious, but it's embedded deep within the rock walls.")
+            
+            self.console.print("[yellow]Will you use a Pickaxe to mine the ore? (y/n)[/]")
+            usedItem = False
+
+            choice = input()
+            while choice != "y" and choice != "n": 
+                badUsage("Only options: y/n")
+                choice = input().lower()
+
+            if choice == "y":
+                success = self.player.removeItem("Pickaxe", 1)
+
+                if not success:
+                    badUsage("You don't have a Pickaxe!")
+
+                else:
+                    self.console.print("[red]- 1 Pickaxe[/]")
+                    usedItem = True
+            
+            if usedItem:
+                storyTeller("You carefully mine the ore using the Pickaxe.")
+                playerMon("Just don't break on me...")
+                storyTeller("You successfully harvest some chunks of valuable ore!")
+                playerMon("This is great!")
+                self.console.print("[green]You mined a precious ore! +30 :money_with_wings:[/]")
+                self.player.addMoney(30)
+            else:
+                storyTeller("You attempt to extract the ore using a nearby stone.")
+                playerMon("Hope it works...")
+                storyTeller("You strike the ore repeatedly with a rock.")
+                isMined = random.choice([True, False])
+                
+                if isMined:
+                    storyTeller("Some ore chunks break free from the wall!")
+                    playerMon("At least someting!")
+                    self.console.print("[green]You gathered some ore! +15 :money_with_wings:[/]")
+                    self.player.addMoney(15)
+                else:
+                    storyTeller("The ore is too hard to mine it this way. Most of your strikes are wastesd.")
+                    playerMon("This isn't working...")
+                    storyTeller("You eventually give up and move on, disappointed.")
         return False
         
     def mainGame(self):
+        self.waiting_for_next = False
         while self.current_world.progress < self.current_world.length:
             should_wait = self.nextEvent(self.current_world.progress)
             if not should_wait:
                 self.current_world.progress += 1
+                self.waiting_for_next = True
+                self.console.print("\n[cyan bold]Type 'next' to continue, until then you can use any other command![/]\n")
+                return
             else:
                 return
 
@@ -507,7 +879,7 @@ class BottyamonCmd(cmd.Cmd):
                 else:
                     badUsage('Different choice was made! Defaulting to "n"...')
                     return
-            self.current_world = createWorld(name, 30)
+            self.current_world = createWorld(name, 15)
             
             with open("data.json", "r") as file:
                 data = json.load(file)
@@ -660,6 +1032,18 @@ class BottyamonCmd(cmd.Cmd):
         self.console.print("[yellow]Bye! :)[/yellow]")
 
         return True
+    
+    def do_save(self, args):
+        """save
+        Command to save your progress"""
+
+        if not self.isLoaded:
+            badUsage("No world is loaded!")
+            return
+        
+        save(self.bottyamon, self.player, self.current_world)
+        self.console.print("[green]Game saved successfully![/]")
+
     def do_settings(self, args):
         """settings list|setting (true/false/other)
         A command to list and change settings"""
@@ -897,6 +1281,21 @@ class BottyamonCmd(cmd.Cmd):
         
         return
     
+    def do_next(self, args):
+        """next
+        Command to continue to the next event"""
+
+        if not self.isLoaded:
+            badUsage("No world is loaded!")
+            return
+        
+        if not self.waiting_for_next:
+            badUsage("Not waiting for next command!")
+            return
+        
+        self.waiting_for_next = False
+        self.mainGame()
+    
     def do_inventory(self, args):
         """inventory
         Command to display your inventory"""
@@ -918,6 +1317,61 @@ class BottyamonCmd(cmd.Cmd):
             )
 
         self.console.print(table)
+
+    def do_stats(self, args):
+        """stats
+        Command to display all your stats"""
+
+        if not self.isLoaded:
+            badUsage("No world is loaded!")
+            return
+
+        # Player Stats Table
+        player_table = Table(title="Player Stats", show_lines=True)
+        player_table.add_column("Stat", style="cyan", no_wrap=True)
+        player_table.add_column("Value", style="yellow")
+
+        player_table.add_row("Level", str(self.player.lvl))
+        player_table.add_row("XP", f"{self.player.xp}/100")
+        player_table.add_row("Money :money_with_wings:", str(self.player.money))
+        player_table.add_row("Rebirths", str(self.player.rebirths))
+        player_table.add_row("Deaths", str(self.player.deaths))
+        
+        effects_display = ", ".join(self.player.effects) if self.player.effects else "None"
+        player_table.add_row("Active Effects", effects_display)
+
+        self.console.print(player_table)
+        self.console.print()
+
+        # Bottyamon Stats Table
+        bottyamon_table = Table(title=f"{self.bottyamon.name}'s Stats", show_lines=True)
+        bottyamon_table.add_column("Stat", style="cyan", no_wrap=True)
+        bottyamon_table.add_column("Value", style="yellow")
+
+        bottyamon_table.add_row("Name", self.bottyamon.name)
+        bottyamon_table.add_row("Type", self.bottyamon.breed)
+        bottyamon_table.add_row("HP :heart:", str(self.bottyamon.hp))
+        bottyamon_table.add_row("Attack :crossed_swords:", str(self.bottyamon.baseAtk))
+        bottyamon_table.add_row("Defense :shield:", str(self.bottyamon.defense))
+        bottyamon_table.add_row("Rarity :star:", self.bottyamon.rarity)
+        bottyamon_table.add_row("Evolved", "Yes" if self.bottyamon.isEvo else "No")
+
+        self.console.print(bottyamon_table)
+        self.console.print()
+
+        # World/Journey Stats Table
+        world_table = Table(title="Journey Progress", show_lines=True)
+        world_table.add_column("Stat", style="cyan", no_wrap=True)
+        world_table.add_column("Value", style="yellow")
+
+        world_table.add_row("World Name", self.current_world.name)
+        world_table.add_row("Current Day", str(self.current_world.progress + 1))
+        world_table.add_row("Total Days", str(self.current_world.length))
+        progress_percent = round((self.current_world.progress / self.current_world.length) * 100, 1)
+        world_table.add_row("Progress", f"{progress_percent}%")
+        world_table.add_row("Seed", str(self.current_world.seed))
+
+        self.console.print(world_table)
 
     
 
