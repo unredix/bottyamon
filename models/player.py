@@ -37,7 +37,7 @@ class Player:
     def addXp(self, xp):
         if (self.xp + xp) >= 100:
             self.lvl += 1
-            self.xp = 100 - (self.xp + xp)
+            self.xp = (self.xp + xp) - 100
         
             return True
         

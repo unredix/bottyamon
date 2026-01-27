@@ -19,7 +19,7 @@ def checkFile(file):
         ans = input("Want to create the file? (y/n)\n")
 
         if ans == 'y':
-            data = {"settings":{"skip_intro":False, "debug": False, "language": "en"}, "saves": {}}
+            data = {"settings":{"skip_intro":False, "debug": False}, "saves": {}}
             with open('data.json', 'w') as file:
                 json.dump(data, file, indent=3)
 
@@ -257,8 +257,6 @@ def fight(bottyamon, player, enemyHp, enemy, NumOfRound=1, overallDmg = 0):
 
         return fight(bottyamon, player, enemyHp, enemy, NumOfRound + 1, overallDmg)
         
-
-
 def playIntro():
     time.sleep(1.5)
     typeText("...", "green", 1, False)
@@ -305,7 +303,8 @@ class BottyamonCmd(cmd.Cmd):
     Settings: settings list|(setting) true|false|(else)
     Next day: next
     Exit game: quit
-                                              """)
+                  
+    Use the "help" command to learn about other commands.""")
     prompt = "> "
 
     def __init__(self, completekey = "tab", stdin = None, stdout = None):
@@ -456,7 +455,7 @@ class BottyamonCmd(cmd.Cmd):
                             if potion_choice == 0:
                                 self.console.print("[yellow]Cancelled.[/]")
                                 break
-                            elif potion_choice >= 1 and potion_choice <= len(available_potions):
+                            elif potion_choice > 0 and potion_choice <= len(available_potions):
                                 selected_potion = available_potions[potion_choice - 1]
                                 
                                 success = self.player.removeItem(selected_potion, 1)
@@ -535,8 +534,8 @@ class BottyamonCmd(cmd.Cmd):
                     self.console.print("[red]- 1 Flashlight[/]")
                     usedItem = True
             
-            storyTeller("As you try to go towards the shout you see something in the dark.")
-
+            storyTeller("As you try to go towards the source of the sound, you see something in the dark.")
+            playerMon("What's that?")
             if usedItem:
                 storyTeller("When you point your flashlight at that something it starts to move.")
                 playerMon("It's a monster!")
@@ -820,26 +819,107 @@ class BottyamonCmd(cmd.Cmd):
                 return
             else:
                 return
+            
+        self.console.print("\n[white on green]Final[/]\n")
+        storyTeller("You look at the local map of the nearby towns and cities.")
+        playerMon("So I'm finally here...")
+        storyTeller("After a quick chat with the local guards, you go thru the big brown door which leads to your final destination.")
+        playerMon("Woah!")
+        storyTeller("A big, lively city's main square welcomed you. After a brief stop you start walking again.")
+        npcMon("Hey Mister! Would you like some apples?", "???")
+        storyTeller("A man who sells apples called you over.")
+        playerMon("Yes, why not.")
+        if self.player.money - 5 < 0:
+                    npcMon("This one is on the house, since you're new here!", "Apple seller")
+        else:
+            self.player.money -= 5
+            self.console.print("[red] - 5 :money_with_wings:")
+            npcMon("Thank you!", "Apple seller")
+
+        storyTeller("When you took a bite from the apple...")
+        typeText("...", "red", 1, isEnter=False)
+        self.console.print("[black on white bold]\n\nDarkness...[/]\n\n")
+        time.sleep(5)
+
+        self.console.print("\n[green bold]Thank you very much for playing the game![/]\n")
+        time.sleep(2)
+
+        typeText("Would you like to rebirth? (y/n)", "gold bold", 0.1, isEnter=False)
+
+        choice = input()
+        while choice != "y" and choice != "n": 
+            badUsage("Only options: y/n")
+            choice = input().lower()
+
+        if choice == "y":
+            saveName = self.current_world.name
+            rebirthCount = self.player.rebirths + 1
+            
+            with open("data.json", "r") as file:
+                data = json.load(file)
+            
+            if saveName in data["saves"]:
+                del data["saves"][saveName]
+            
+            with open("data.json", "w") as file:
+                json.dump(data, file, indent=3)
+            
+            self.console.print("[yellow]Your old save has been cleared...[/]")
+            time.sleep(1)
+            
+            self.current_world = None
+            self.bottyamon = None
+            self.battle = None
+            self.player = None
+            self.isLoaded = False
+            self.current_shop = None
+            self.current_savePoint = None
+            self.current_battle = None
+            self.waiting_for_next = True
+            
+            self.console.print("[green]Starting a new adventure...[/]")
+            typeText("...", "green", 1, isEnter=False)
+            clearScreen()
+            
+            self.current_world = createWorld(saveName, 20)
+            self.player = Player()
+            self.player.rebirths = rebirthCount
+            self.isLoaded = True
+            
+            self.console.print(f"[cyan]Rebirth #{rebirthCount}[/]")
+            time.sleep(1)
+            
+            self.mainGame()
+        else:
+            self.console.print("\n[yellow bold]I hope you had fun! :DD[/]\n")
+            time.sleep(5)
+            self.isLoaded = False
+            return False
 
     def do_load(self, args):
-        """load save|new (save name)
-        Loads a save or creates one"""
+        """load save|saves|new (save name)
+        Loads a save, lists them or creates one"""
 
         if checkFile("data.json"):
             return
 
         args = args.lower().split()
 
-        if len(args) < 2:
-            badUsage("Bad usage. Try: load save|new (name)")
+        if len(args) < 1:
+            badUsage("Bad usage. Try: load save|saves|new (name)")
             return
 
         if not args:
             badUsage("You must give a save name or start a new save with load new (name)")
             return
         if args[0] == "new":
-            name = args[1]
             
+            if len(args) < 2:
+                badUsage("You have to give a name!")
+                return
+            
+            name = args[1]
+
             isDebugVar = isDebug("data.json")
 
             if not checkNewSave(name):
@@ -973,8 +1053,12 @@ class BottyamonCmd(cmd.Cmd):
             self.mainGame()
             
         elif args[0] == "save":
+            
+            if len(args) < 2:
+                badUsage("You have to name a save!")
+                return
+            
             data = loadSave(args[1])
-
             if not data:
                 badUsage("Save doesn't exist! Create it with load new (save name).")
                 return
@@ -1005,12 +1089,29 @@ class BottyamonCmd(cmd.Cmd):
                 self.console.print(f"Loaded save: W: {self.current_world.name} P: {self.player.lvl} B: {self.bottyamon.name}")
 
             self.console.print ("[green]Loading save:[/green]", args[1])
-
+            typeText("...", "green", 1, isEnter=False)
+            
+            clearScreen()
             self.isLoaded = True
 
             self.mainGame()
+
+        elif args[0] == "saves":
+            
+            with open("data.json", "r") as file:
+                data = json.load(file)        
+            table = Table(title="Saves")
+
+            table.add_column("Save")
+            table.add_column("Days")
+
+            for key, item in data["saves"].items():
+                table.add_row(key, str(item["World"]["progress"]))
+
+            rprint(table)
+
         else:
-            badUsage("Bad usage. Try: load save|new (name)")
+            badUsage("Bad usage. Try: load save|saves|new (name)")
     def do_quit(self, args):
         """quit
         Command to quit the game"""
@@ -1029,9 +1130,45 @@ class BottyamonCmd(cmd.Cmd):
                 self.console.print('[yellow]Defaulting to "y"[/]')
                 save(self.bottyamon, self.player, self.current_world)
                 self.console.print("[green]Saved.[/]")
-        self.console.print("[yellow]Bye! :)[/yellow]")
-
-        return True
+            
+            self.console.print("[yellow]Returning to starter screen...[/]")
+            self.current_world = None
+            self.bottyamon = None
+            self.battle = None
+            self.player = None
+            self.isLoaded = False
+            self.current_shop = None
+            self.current_savePoint = None
+            self.current_battle = None
+            self.waiting_for_next = True
+            clearScreen()
+            print(r"""    _____                                                                 _____ 
+   ( ___ )                                                               ( ___ )
+    |   |~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|   | 
+    |   |  ___           _    _                                           |   | 
+    |   | (  _`\        ( )_ ( )_                                         |   | 
+    |   | | (_) )   _   | ,_)| ,_) _   _    _ _   ___ ___     _     ___   |   | 
+    |   | |  _ <' /'_`\ | |  | |  ( ) ( ) /'_` )/' _ ` _ `\ /'_`\ /' _ `\ |   | 
+    |   | | (_) )( (_) )| |_ | |_ | (_) |( (_| || ( ) ( ) |( (_) )| ( ) | |   | 
+    |   | (____/'`\___/'`\__)`\__)`\__, |`\__,_)(_) (_) (_)`\___/'(_) (_) |   | 
+    |   |                         ( )_| |                                 |   | 
+    |   |                         `\___/'                                 |   | 
+    |___|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|___| 
+   (_____)                                                               (_____)
+                                     V1.0 
+                              A small story game
+    
+    Load save: load save (save name)
+    Start new game: load new (save name)
+    Settings: settings list|(setting) true|false|(else)
+    Next day: next
+    Exit game: quit
+                  
+    Use the "help" command to learn about other commands.""")
+            return False
+        else:
+            self.console.print("[yellow]Bye! :)[/yellow]")
+            return True
     
     def do_save(self, args):
         """save
@@ -1201,7 +1338,8 @@ class BottyamonCmd(cmd.Cmd):
 
             shopShow(tryShop.shopItems)
     def do_buy(self, args):
-
+        """buy (id) (amount)
+        Command to put items in your basket"""
         args = args.lower().split()
 
         if self.current_shop == None:
@@ -1234,7 +1372,7 @@ class BottyamonCmd(cmd.Cmd):
             self.player.money -= basketPrice
 
             for key, item in inBasket.items():
-                self.player.inventory[key] = item
+                self.player.inventory[key] = int(item)
             
             self.console.print(f"[yellow]Your new balance:money_with_wings:: {self.player.money}[/]")
             self.current_shop = None
@@ -1326,7 +1464,6 @@ class BottyamonCmd(cmd.Cmd):
             badUsage("No world is loaded!")
             return
 
-        # Player Stats Table
         player_table = Table(title="Player Stats", show_lines=True)
         player_table.add_column("Stat", style="cyan", no_wrap=True)
         player_table.add_column("Value", style="yellow")
@@ -1343,7 +1480,6 @@ class BottyamonCmd(cmd.Cmd):
         self.console.print(player_table)
         self.console.print()
 
-        # Bottyamon Stats Table
         bottyamon_table = Table(title=f"{self.bottyamon.name}'s Stats", show_lines=True)
         bottyamon_table.add_column("Stat", style="cyan", no_wrap=True)
         bottyamon_table.add_column("Value", style="yellow")
@@ -1359,7 +1495,6 @@ class BottyamonCmd(cmd.Cmd):
         self.console.print(bottyamon_table)
         self.console.print()
 
-        # World/Journey Stats Table
         world_table = Table(title="Journey Progress", show_lines=True)
         world_table.add_column("Stat", style="cyan", no_wrap=True)
         world_table.add_column("Value", style="yellow")
@@ -1373,7 +1508,47 @@ class BottyamonCmd(cmd.Cmd):
 
         self.console.print(world_table)
 
-    
+    def do_retrain(self, args):
+        """retrain
+        Command to retrain your Bottyamon using a Retrain pill"""
+
+        if not self.isLoaded:
+            badUsage("No world is loaded!")
+            return
+
+        if "Retrain pill" not in self.player.inventory or self.player.inventory["Retrain pill"] < 1:
+            badUsage("You don't have a Retrain pill!")
+            return
+
+        self.console.print(f"[yellow]Current stats of {self.bottyamon.name}:[/]")
+        self.console.print(f"[red]ATK[/red] :crossed_swords: : {self.bottyamon.baseAtk}")
+        self.console.print(f"[blue]DEF[/blue] :shield: : {self.bottyamon.defense}")
+        self.console.print(f":star: Rarity: [yellow]{self.bottyamon.rarity}[/yellow]\n")
+
+        self.console.print("[yellow]Are you sure you want to use a Retrain pill? Your Bottyamon will get new random stats. (y/n)[/]")
+        choice = input().lower()
+        
+        while choice != "y" and choice != "n":
+            badUsage("Only options: y/n")
+            choice = input().lower()
+
+        if choice == "n":
+            self.console.print("[yellow]Retrain cancelled.[/]")
+            return
+
+        success = self.player.removeItem("Retrain pill", 1)
+        
+        if not success:
+            badUsage("Failed to use Retrain pill!")
+            return
+
+        self.console.print("[green]Using Retrain pill...[/]")
+        typeText("...", "green", 1, isEnter=False)
+
+        trainedStats = self.bottyamon.train(self.player.rebirths, self.current_world.seed)
+
+        self.console.print(f"[green]{self.bottyamon.name} has been retrained![/]\n")
+        self.console.print(f"New stats:\n[red]ATK[/red] :crossed_swords: : {trainedStats[0]}\n[blue]DEF[/blue] :shield: : {trainedStats[1]}\n:star: Rarity: [yellow]{trainedStats[2]}[/yellow]")
 
 if __name__ == '__main__':
     BottyamonCmd().cmdloop()
