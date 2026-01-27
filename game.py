@@ -202,9 +202,9 @@ def fight(bottyamon, player, enemyHp, enemy, NumOfRound=1, overallDmg = 0):
         enemyTypeEffect = 1
 
         if enemy[1] in weaknesses[bottyamon.breed]:
-            playerTypeEffect = 1.35
+            playerTypeEffect = 1.2
         if enemy[1] in strengths[bottyamon.breed]:
-            enemyTypeEffect = 1.35
+            enemyTypeEffect = 1.2
 
         time.sleep(1)
         rprint(f"[black on white]Round: {NumOfRound}[/]")
@@ -233,8 +233,8 @@ def fight(bottyamon, player, enemyHp, enemy, NumOfRound=1, overallDmg = 0):
 
         success = random.choice([True, False])
 
-        finalAttack = (random.randint(5, 10) * enemyTypeEffect) * round(random.uniform(1, 1.5), 2) 
-        trueDmg = int(finalAttack - bottyamon.defense + applyEffect("def", player.effects))
+        finalAttack = (random.randint(8, 15) * enemyTypeEffect) * round(random.uniform(1, 1.5), 2) 
+        trueDmg = int(finalAttack - bottyamon.defense - applyEffect("def", player.effects))
 
         rprint(f"[yellow]{enemy[0]}[/] attacks!")
 
@@ -415,7 +415,7 @@ class BottyamonCmd(cmd.Cmd):
                 playerMon(f"A {enemy[0]}!")
             
             self.console.print("\n[black on yellow bold]BATTLE TIME![/]\n")
-            enemyHp = random.randint(50,100)
+            enemyHp = random.randint(60,120)
             self.console.print(f"[gray]The enemy:\n[/][yellow]Type: {enemy[1]}[/]\n[red]Health: {enemyHp}[/]\n")
             self.console.print(f"[gray]You:\n[/][yellow]Type: {self.bottyamon.breed}[/]\n[red]Health: {self.bottyamon.hp}[/]\n")
 

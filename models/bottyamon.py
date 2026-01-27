@@ -20,7 +20,7 @@ class Bottyamon:
             random.seed(seed)
 
 
-        self.baseAtk = round(random.randint(5, 15) * rebirthMultiplier)
+        self.baseAtk = round(random.randint(5, 10) * rebirthMultiplier)
         self.defense = round(random.randint(1, 10) * rebirthMultiplier)
 
         rating = (self.baseAtk + self.defense)
