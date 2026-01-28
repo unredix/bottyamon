@@ -26,7 +26,7 @@ def checkFile(file):
             rprint(f"[green]File is created![/green]")
             return True
         else:
-            rprint("[yellow]Ok, try find it then :)[/yellow]")
+            rprint("[yellow]OK, try to find it then :)[/yellow]")
             return True
 def isDebug(file):
     checkFile(file)
@@ -136,7 +136,7 @@ def clearScreen():
 
 def shopShow(shop, playerMoney):
     table = Table(title="Shop", show_lines=True)
-    table.add_column("Id", justify="right", style="cyan", no_wrap=True)
+    table.add_column("ID", justify="right", style="cyan", no_wrap=True)
     table.add_column("Item", style="magenta")
     table.add_column("Stock", justify="right", style="yellow")
     table.add_column("Price", justify="right", style="green")
@@ -148,7 +148,7 @@ def shopShow(shop, playerMoney):
             str(data["amount"]),
             str(data["price"]),
         )
-    rprint(table,f"\n[yellow]Your balance :money_with_wings:: {playerMoney}[/]\n\n[yellow]Help:[/]\nYou can buy items using: [blue bold]buy (id) (amount)[/]\nYou can checkout with [blue bold]buy checkout[/]\nOr you can cancel with: [blue bold]buy cancel[/]")
+    rprint(table,f"\n[yellow]Your balance: :money_with_wings: {playerMoney}[/]\n\n[yellow]Help:[/]\nYou can buy items using: [blue bold]buy (ID) (amount)[/]\nYou can check out with [blue bold]buy checkout[/]\nOr you can cancel with: [blue bold]buy cancel[/]")
 
 def applyEffect(type, effects):
     if type == "dmg":
@@ -261,23 +261,23 @@ def playIntro():
     time.sleep(1.5)
     typeText("...", "green", 1, False)
     clearScreen()
-    storyTeller("You open your eyes and find an unfamiliar ceiling. You don't remember anything or anyone. As you sit up, you try desperately to remember anything that might give you a clue who you might be.")
+    storyTeller("You open your eyes and see an unfamiliar ceiling. You don't remember anything or anyone. As you sit up, you try desperately to remember anything that might give you a clue about who you might be.")
     playerMon("It's no use...")
-    storyTeller("After some time you decide to go out from your room to look around.")
+    storyTeller("After some time, you decide to go out of your room and look around.")
     playerMon("...")
-    storyTeller("The sight of a small tavern's inside welcomed you. As you walk down on the stairs towards the exit the receptionist call after you.")
+    storyTeller("The sight of a small tavern's interior welcomed you. As you walk down the stairs toward the exit, the receptionist calls after you.")
     npcMon("Hey! I got something for you!", "Receptionist")
-    storyTeller("As you walk up to the counter the receptionist hands you a map.")
+    storyTeller("As you walk up to the counter, the receptionist hands you a map.")
     npcMon("Here, take a look. Something tells me that you might need this.", "Receptionist")
     playerMon("Thank you...")
-    storyTeller("As you look at the map the receptionist gave you, from the side of your eye you catch something. A name you think you're familiar with but don't actually know...")
+    storyTeller("As you look at the map the receptionist gave you, out of the corner of your eye you catch something. A name you think you're familiar with but don't actually know...")
     playerMon("!!!")
-    storyTeller("This is your only chance. You think to yourself.")
+    storyTeller("This is your only chance, you think to yourself.")
     playerMon("How can I get to *there*?")
     npcMon("The thing is... it's really difficult even for seasoned hunters to get to *there*...","Receptionist")
     npcMon("I think I can help.", "???")
-    storyTeller("An old man sitting at one of the many tables in the reception, spoke up.")
-    npcMon("I just wanted to sell my untrained Bottyamon to someone... I'll give it to you if you promise you tell me your tales when we next meet.", "Old man")
+    storyTeller("An old man sitting at one of the many tables in the tavern spoke up.")
+    npcMon("I just wanted to sell my untrained Bottyamon to someone... I'll give it to you if you promise to tell me your tales when we next meet.", "Old man")
     playerMon("I gladly accept!")
 
 class BottyamonCmd(cmd.Cmd):
@@ -331,9 +331,9 @@ class BottyamonCmd(cmd.Cmd):
             self.current_shop.generateShop()
             generatedItems = self.current_shop.shopItems
 
-            storyTeller("As you walk out from a big forest's dark inside, your eyes catch something.")
+            storyTeller("As you walk out of the dark interior of the forest, your eyes catch something.")
             playerMon("It's a Shop!")
-            storyTeller("You go and get closer to the Shop to see its offerings")
+            storyTeller("You go and get closer to the Shop to see its offerings.")
 
             shopShow(generatedItems, self.player.money)
             return True
@@ -343,15 +343,15 @@ class BottyamonCmd(cmd.Cmd):
             self.current_savePoint.generateTrader()
             data = self.current_savePoint.traderItem
     
-            storyTeller("You notice a busy looking road next to your trail you were following. You decide to check it out.")
+            storyTeller("You notice a busy-looking road next to the trail you were following. You decide to check it out.")
             npcMon("Welcome!", "???")
             storyTeller("On the side of the road a guard stood proudly.")
             npcMon("Can I see some identification?", "Guard")
-            storyTeller("You hand your id to him.")
-            npcMon("It's alright, you might get thru.", "Guard")
-            storyTeller("As you walk to the big front gate of the Safe Point a trader approaches you...")
+            storyTeller("You hand your ID to him.")
+            npcMon("It's all right, you might get through.", "Guard")
+            storyTeller("As you walk to the big front gate of the Safe Point, a trader approaches you...")
             npcMon("Would you mind trading with me?", "Trader")
-            self.console.print("Would you like to see the traders offer? (y/n)")
+            self.console.print("Would you like to see the trader's offer? (y/n)")
             choice = input()
             while choice != "y" and choice != "n": 
                 badUsage("Only options: y/n")
@@ -369,19 +369,19 @@ class BottyamonCmd(cmd.Cmd):
                     success = self.player.removeItem(data["name"], 1)
 
                     if success:
-                        npcMon("It was pleasure doing business with you!", "Trader")
+                        npcMon("It was a pleasure doing business with you!", "Trader")
                         self.console.print(f"[red]- 1 {data["name"]}[/]\n[green]+ {data['price']} money[/]")
                     else:
                         badUsage("You don't have the necessary item!")
                         npcMon("Too bad.", "Trader")
 
                 elif choice == "n":
-                    npcMon("Alright, lets meet again sometime!", "Trader")
+                    npcMon("All right, let's meet again sometime!", "Trader")
                 
             elif choice == "n":
-                npcMon("Lets meet again sometime.", "Trader")
+                npcMon("Let's meet again sometime.", "Trader")
             
-            storyTeller("After you left the trader you go to the Safe Zones big gate.")
+            storyTeller("After you leave the trader, you go to the Safe Zone's main gate.")
             npcMon("Have a nice stay!", "Guard 2")
             typeText("...", "green bold", 1, isEnter=False)
             self.bottyamon.hp = 100
@@ -399,17 +399,17 @@ class BottyamonCmd(cmd.Cmd):
             meetType = random.randint(1,3)
 
             if meetType == 1:
-                storyTeller("As you wonder in the woods of the big forest, which you decided to go thru as a shortcut, a large something is coming towards you.")
+                storyTeller("As you wander in the woods of the great forest, which you decided to go through as a shortcut, something large is coming toward you.")
                 playerMon("!!!")
                 storyTeller(f"It's a {enemy[0]}!")
 
             if meetType == 2:
-                storyTeller("You're climbing a mountain in order to get to its other side, but your feet slips on one of the small rocks. As you try to regain your consciousness you see something strange before your eyes.")
+                storyTeller("You're climbing a mountain in order to get to its other side, but your feet slip on one of the small rocks. As you try to regain consciousness, you see something strange before your eyes.")
                 playerMon("!!!")
                 storyTeller(f"It's a {enemy[0]}!")
             
             if meetType == 3:
-                storyTeller("When you wake up you usually look around really carefully before proceeding to continue your journey. This time it really came in use as you did your morning routine.")
+                storyTeller("When you wake up you usually look around really carefully before continuing your journey. This time it really came in handy as you did your morning routine.")
                 playerMon("!!!")
                 storyTeller("At a nearby tree you see something...")
                 playerMon(f"A {enemy[0]}!")
@@ -501,7 +501,7 @@ class BottyamonCmd(cmd.Cmd):
                             self.bottyamon.isEvo = True
                 
             if results[0] == False:
-                self.console.print(f"You lost:\n:money_with_wings: -50%")
+                self.console.print(f"\nYou lost:\n:money_with_wings: -50%")
                 self.player.money *= 0.5
 
         if currentEvent in [6, 7]:
@@ -558,7 +558,7 @@ class BottyamonCmd(cmd.Cmd):
             npcMon("Help me!", "???")
             npcMon("Someone help me please!", "???")
 
-            storyTeller("You look down and see a middle age man shouting up from a small edge of the hill.")
+            storyTeller("You look down and see a middle-aged man shouting up from a small edge of the hill.")
             playerMon("Hey! I think I can help you!")
 
             self.console.print("[yellow]Will you use a Rope? (y/n)[/]")
@@ -580,10 +580,10 @@ class BottyamonCmd(cmd.Cmd):
                     usedItem = True
             
             if usedItem:
-                storyTeller("You get your rope out of your backback and you start to lower it for him.")
+                storyTeller("You get your rope out of your backpack and you start to lower it for him.")
                 playerMon("Grab it!")
                 npcMon("I'll try!", "Man")
-                storyTeller("The stranger grabbed the robe and you pulled him up.")
+                storyTeller("The stranger grabbed the rope and you pulled him up.")
                 npcMon("Thank you very much!", "Man")
                 self.console.print("[green]As a reward for your efforts you get 20 :money_with_wings:.[/]")
                 self.player.addMoney(20)
@@ -594,24 +594,24 @@ class BottyamonCmd(cmd.Cmd):
                 if isFail:
                     storyTeller("As you try to pull him up, your hand slips...")
                     playerMon("!!!")
-                    storyTeller("The stranger you met just a minute ago has fallen into the darks of the hillside...")
+                    storyTeller("The stranger you met just a minute ago has fallen into the darkness of the hillside...")
                 
                 else:
-                    storyTeller("You start to pull up him!")
+                    storyTeller("You start to pull him up!")
                     playerMon("Almost there!")
                     storyTeller("You successfully pulled the stranger up!")
                     npcMon("Thank you very much for your help!", "Man")
-                    self.console.print("[green]As a reward for your help the Man gave you 10 :money_with_wings:!")
+                    self.console.print("[green]As a reward for your help, the man gave you 10 :money_with_wings:!")
                     self.player.addMoney(10)
 
         if currentEvent in [10, 11]:
-            storyTeller("You're in going thru a small village when you come across a crowd forming at one of the shops.")
+            storyTeller("You're going through a small village when you come across a crowd forming at one of the shops.")
             playerMon("What happened?")
-            npcMon("The fish bowl the shopkeeper used to store still alive fish has a crack on it and they're trying to figure out what to do.", "Bystander")
+            npcMon("The fish bowl the shopkeeper uses to store live fish has a crack in it, and they're trying to figure out what to do.", "Bystander")
             playerMon("I think I can help!")
             storyTeller("You go directly to the shopkeeper and ask if you can help figure out the problem.")
             playerMon("Hello! I think I have a solution!")
-            npcMon("Really son? Then out with it!", "Shopkeeper")
+            npcMon("Really, son? Then out with it!", "Shopkeeper")
             
             self.console.print("[yellow]Will you use Duck Tape? (y/n)[/]")
             usedItem = False
@@ -632,12 +632,12 @@ class BottyamonCmd(cmd.Cmd):
                     usedItem = True
             
             if usedItem:
-                storyTeller("The shopkeepers eyes widened as you pulled a piece of duck tape form your backpack...")
+                storyTeller("The shopkeeper's eyes widened as you pulled a piece of duck tape from your backpack...")
                 npcMon("AND WHAT WOULD THAT DO!?", "Shopkeeper")
                 playerMon("Now, now... Just look and see the magic!")
                 storyTeller("You placed the Duck Tape on the leaking bowl.")
                 npcMon("!!!", "Shopkeeper")
-                storyTeller("The leak stopped on an instant.")
+                storyTeller("The leak stopped in an instant.")
                 playerMon("I told you!")
                 self.console.print("[green]As a reward for your help the Shopkeeper gave you 15 :money_with_wings:![/]")
                 self.player.addMoney(15)
@@ -646,7 +646,7 @@ class BottyamonCmd(cmd.Cmd):
                 playerMon("Hmm... Maybe I can seal it with something from nature...")
                 storyTeller("You go outside and find some tree resin on a nearby tree. You apply it carefully to the crack.")
                 npcMon("I don't really trust you with this one...", "Shopkeeper")
-                playerMon("Lets just see...")
+                playerMon("Let's just see...")
                 isSuccess = random.choice([True, False])
                 
                 if isSuccess:
@@ -791,11 +791,11 @@ class BottyamonCmd(cmd.Cmd):
                 
                 if isMined:
                     storyTeller("Some ore chunks break free from the wall!")
-                    playerMon("At least someting!")
+                    playerMon("At least something!")
                     self.console.print("[green]You gathered some ore! +15 :money_with_wings:[/]")
                     self.player.addMoney(15)
                 else:
-                    storyTeller("The ore is too hard to mine it this way. Most of your strikes are wastesd.")
+                    storyTeller("The ore is too hard to mine this way. Most of your strikes are wasted.")
                     playerMon("This isn't working...")
                     storyTeller("You eventually give up and move on, disappointed.")
         return False
@@ -816,9 +816,9 @@ class BottyamonCmd(cmd.Cmd):
         self.console.print("\n[white on green]Final[/]\n")
         storyTeller("You look at the local map of the nearby towns and cities.")
         playerMon("So I'm finally here...")
-        storyTeller("After a quick chat with the local guards, you go thru the big brown door which leads to your final destination.")
+        storyTeller("After a quick chat with the local guards, you go through the big brown door that leads to your final destination.")
         playerMon("Woah!")
-        storyTeller("A big, lively city's main square welcomed you. After a brief stop you start walking again.")
+        storyTeller("A big, lively city's main square welcomed you. After a brief stop, you start walking again.")
         npcMon("Hey Mister! Would you like some apples?", "???")
         storyTeller("A man who sells apples called you over.")
         playerMon("Yes, why not.")
@@ -837,7 +837,7 @@ class BottyamonCmd(cmd.Cmd):
         self.console.print("\n[green bold]Thank you very much for playing the game![/]\n")
         time.sleep(2)
 
-        typeText("Would you like to rebirth? (y/n)", "gold bold", 0.1, isEnter=False)
+        typeText("Would you like to be reborn? (y/n)", "gold bold", 0.1, isEnter=False)
 
         choice = input()
         while choice != "y" and choice != "n": 
@@ -967,7 +967,7 @@ class BottyamonCmd(cmd.Cmd):
             else:
                 playIntro()
             
-            npcMon("I haven't gave them a name, please give them one...", "Old man", isEnter=False)
+            npcMon("I didn't give it a name, so please give it one...", "Old man", isEnter=False)
             bottyamonName = ""
             while True:
                 taskTeller("Give your Bottyamon a name: ", isEnter=False)
@@ -979,11 +979,11 @@ class BottyamonCmd(cmd.Cmd):
                     break
             time.sleep(1)
             playerMon(f"I should call you... {bottyamonName}!")
-            npcMon("Great name choice! It's better than I've ever given!", "Old man")
-            storyTeller("You start thinking about what names the old man could even give to his pets if the name you gave is considered really good...")
-            npcMon("Now. This Bottyamon has an affinity to three types. Choose one now and train it good!", "Old man", isEnter=False)
+            npcMon("Great name choice! It's better than any I've ever given!", "Old man")
+            storyTeller("You start thinking about what names the old man could give his pets if the name you gave is considered really good...")
+            npcMon("Now, this Bottyamon has an affinity for three types. Choose one now and train it well!", "Old man", isEnter=False)
             time.sleep(1)
-            taskTeller("Choose from one of these options:", isEnter=False)
+            taskTeller("Choose one of these options:", isEnter=False)
             
             types = ["Lightning", "Earth", "Water", "Gas", "Darkness", "Shadow", "Stone", "Fire"]
             got = []
@@ -1040,7 +1040,7 @@ class BottyamonCmd(cmd.Cmd):
             playerMon(f"I finally managed to train you, {bottyamonName}")
             self.console.print(f"The stats your Bottyamon got:\n\n[red]ATK[/red] :crossed_swords: : {trainedStats[0]}\n[blue]DEF[/blue] :shield: : {trainedStats[1]}\n\n:star: The rarity you got: [yellow]{trainedStats[2]}[/yellow]")
             time.sleep(1)
-            storyTeller("Now that your Bottyamon is trained, you can go out in the wild and try to reach your destiny.")
+            storyTeller("Now that your Bottyamon is trained, you can go out into the wild and try to reach your destiny.")
             self.console.print("\n[white on green bold]And the game starts![/]\n")
 
             self.mainGame()
@@ -1331,7 +1331,7 @@ class BottyamonCmd(cmd.Cmd):
 
             shopShow(tryShop.shopItems)
     def do_buy(self, args):
-        """buy (id) (amount)
+        """buy (ID) (amount)
         Command to put items in your basket"""
         args = args.lower().split()
 
@@ -1367,7 +1367,7 @@ class BottyamonCmd(cmd.Cmd):
             for key, item in inBasket.items():
                 self.player.inventory[key] = int(item)
             
-            self.console.print(f"[yellow]Your new balance:money_with_wings:: {self.player.money}[/]")
+            self.console.print(f"[yellow]Your new balance: :money_with_wings: {self.player.money}[/]")
             self.current_shop = None
 
             storyTeller("After putting your item(s) in your backpack, you go and look for a place to stay for the night.")
@@ -1390,7 +1390,7 @@ class BottyamonCmd(cmd.Cmd):
 
             return
         if len(args) < 2:
-            badUsage("You have to give an Id and an Amount!")
+            badUsage("You have to give an ID and an amount!")
             return
         
         exists = False
@@ -1407,7 +1407,7 @@ class BottyamonCmd(cmd.Cmd):
                 break
         
         if not exists:
-            badUsage("The Id you provided doesn't exists!")
+            badUsage("The ID you provided doesn't exist!")
             return
         
         return
