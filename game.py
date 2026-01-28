@@ -212,7 +212,7 @@ def fight(bottyamon, player, enemyHp, enemy, NumOfRound=1, overallDmg = 0):
         rprint(f"[yellow]{bottyamon.name}[/] attacks!")
         time.sleep(3)
         finalAttack = (bottyamon.baseAtk + applyEffect("dmg", player.effects)) * playerTypeEffect
-        trueDmg = max(1, int(finalAttack - enemyDef))
+        trueDmg = round(max(1, int(finalAttack - enemyDef)), 2)
 
         overallDmg += trueDmg
 
@@ -234,13 +234,13 @@ def fight(bottyamon, player, enemyHp, enemy, NumOfRound=1, overallDmg = 0):
         success = random.choice([True, False])
 
         finalAttack = (random.randint(5, 10) * enemyTypeEffect) * round(random.uniform(1, 1.5), 2) 
-        trueDmg = int(finalAttack - bottyamon.defense - applyEffect("def", player.effects))
+        trueDmg = max(1, int(finalAttack - bottyamon.defense - applyEffect("def", player.effects)))
 
         rprint(f"[yellow]{enemy[0]}[/] attacks!")
 
         if choice == "y" and not success:
             rprint("[red]Your dodge attempt failed! The dmg got x1.35![/]")
-            trueDmg = trueDmg * 1.35
+            trueDmg = round(trueDmg * 1.35, 2)
         
         if choice == "y" and success:
             rprint(f"[green bold]You dodged a {trueDmg} dmg attack![/]")
@@ -487,7 +487,7 @@ class BottyamonCmd(cmd.Cmd):
                     self.console.print(f"[green bold]Lvl up! You're now lvl {self.player.lvl}![/]")
 
                     lvluprewards = {5: "Evolve chance", 10 : "Strength Potion (+3)", 15: "Retrain pill", 20: "Evolve chance"}
-                    reward = lvluprewards[self.player.lvl]
+                    reward = lvluprewards.get(self.player.lvl)
 
                     if reward:
                         if reward != "Evolve chance":
