@@ -501,7 +501,7 @@ class BottyamonCmd(cmd.Cmd):
                             self.bottyamon.isEvo = True
                 
             if results[0] == False:
-                self.console.print(f"\nYou lost:\n:money_with_wings: -50%")
+                self.console.print(f"\nYou lost:\n:money_with_wings: - {self.player.money * 0.5}")
                 self.player.money *= 0.5
 
         if currentEvent in [6, 7]:
