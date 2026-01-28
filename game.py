@@ -168,9 +168,9 @@ def applyEffect(type, effects):
         return 0
     if type == "hp":
         if "HP Potion (+25)" in effects:
-            return 5
+            return 25
         if "HP Potion (+50)" in effects:
-            return 8
+            return 50
 
         return 0
 def fight(bottyamon, player, enemyHp, enemy, NumOfRound=1, overallDmg = 0):
@@ -202,9 +202,9 @@ def fight(bottyamon, player, enemyHp, enemy, NumOfRound=1, overallDmg = 0):
         enemyTypeEffect = 1
 
         if enemy[1] in weaknesses[bottyamon.breed]:
-            playerTypeEffect = 1.2
+            playerTypeEffect = 1.5
         if enemy[1] in strengths[bottyamon.breed]:
-            enemyTypeEffect = 1.2
+            enemyTypeEffect = 1.5
 
         time.sleep(1)
         rprint(f"[black on white]Round: {NumOfRound}[/]")
@@ -212,7 +212,7 @@ def fight(bottyamon, player, enemyHp, enemy, NumOfRound=1, overallDmg = 0):
         rprint(f"[yellow]{bottyamon.name}[/] attacks!")
         time.sleep(3)
         finalAttack = (bottyamon.baseAtk + applyEffect("dmg", player.effects)) * playerTypeEffect
-        trueDmg = int(finalAttack - enemyDef)
+        trueDmg = max(1, int(finalAttack - enemyDef))
 
         overallDmg += trueDmg
 
@@ -233,14 +233,14 @@ def fight(bottyamon, player, enemyHp, enemy, NumOfRound=1, overallDmg = 0):
 
         success = random.choice([True, False])
 
-        finalAttack = (random.randint(8, 15) * enemyTypeEffect) * round(random.uniform(1, 1.5), 2) 
+        finalAttack = (random.randint(5, 10) * enemyTypeEffect) * round(random.uniform(1, 1.5), 2) 
         trueDmg = int(finalAttack - bottyamon.defense - applyEffect("def", player.effects))
 
         rprint(f"[yellow]{enemy[0]}[/] attacks!")
 
         if choice == "y" and not success:
-            rprint("[red]Your dodge attempt failed! The dmg got x2![/]")
-            trueDmg = trueDmg * 2
+            rprint("[red]Your dodge attempt failed! The dmg got x1.35![/]")
+            trueDmg = trueDmg * 1.35
         
         if choice == "y" and success:
             rprint(f"[green bold]You dodged a {trueDmg} dmg attack![/]")
@@ -415,7 +415,7 @@ class BottyamonCmd(cmd.Cmd):
                 playerMon(f"A {enemy[0]}!")
             
             self.console.print("\n[black on yellow bold]BATTLE TIME![/]\n")
-            enemyHp = random.randint(60,120)
+            enemyHp = random.randint(30,60)
             self.console.print(f"[gray]The enemy:\n[/][yellow]Type: {enemy[1]}[/]\n[red]Health: {enemyHp}[/]\n")
             self.console.print(f"[gray]You:\n[/][yellow]Type: {self.bottyamon.breed}[/]\n[red]Health: {self.bottyamon.hp}[/]\n")
 
@@ -480,8 +480,8 @@ class BottyamonCmd(cmd.Cmd):
             if results[0] == True:
                 rewards = [round((results[1] * 0.25)), results[1]]
                 self.console.print(f"\nRewards:\n:money_with_wings: {rewards[0]}\nxp {rewards[1]}\n")
-                didLvlUp = self.player.addXp(rewards[0])
-                self.player.addMoney(rewards[1])
+                didLvlUp = self.player.addXp(rewards[1])
+                self.player.addMoney(rewards[0])
 
                 if didLvlUp:
                     self.console.print(f"[green bold]Lvl up! You're now lvl {self.player.lvl}![/]")
@@ -495,22 +495,14 @@ class BottyamonCmd(cmd.Cmd):
                             self.console.print(f"+ 1 {reward}")
                             self.player.addItem(reward, 1)
                         else:
-                            self.console.print("[yellow bold]:star: You got a chance to evolve![/]")
+                            self.console.print("[yellow bold]:star: Your Bottyamon is evolving![/]")
                             time.sleep(2)
-                            isEvoVar = random.choice([True, False])
-
-                            if isEvoVar:
-                                self.console.print("[green]You successfully evolved your bottyamon![/]")
-                                self.bottyamon.isEvo = True
-                            else:
-                                self.console.print("[red]Your evolvement of your Bottyamon failed![/]")
+                            self.console.print("[green]Your Bottyamon successfully evolved![/]")
+                            self.bottyamon.isEvo = True
                 
             if results[0] == False:
-                self.console.print(f"You lost:\n:money_with_wings: -{results[2]}")
-                if self.player.money - results[2] < 0:
-                    self.player.money = 0
-                else:
-                    self.player.money -= results[2]
+                self.console.print(f"You lost:\n:money_with_wings: -50%")
+                self.player.money *= 0.5
 
         if currentEvent in [6, 7]:
             storyTeller("You woke up at night after a long day of walking in a big wheat farm as you heard a shout from the distance.")
@@ -596,7 +588,7 @@ class BottyamonCmd(cmd.Cmd):
                 self.console.print("[green]As a reward for your efforts you get 20 :money_with_wings:.[/]")
                 self.player.addMoney(20)
             else:
-                storyTeller("You get on your stomach and offer your hand to him!")
+                storyTeller("You get on your stomach and offer your hand to him.")
                 playerMon("Here! Try grabbing it!")
                 isFail = random.choice([True, False])
                 if isFail:
@@ -810,6 +802,7 @@ class BottyamonCmd(cmd.Cmd):
         
     def mainGame(self):
         self.waiting_for_next = False
+        self.isLoaded = True
         while self.current_world.progress < self.current_world.length:
             should_wait = self.nextEvent(self.current_world.progress)
             if not should_wait:
