@@ -20,7 +20,7 @@ class Player:
             return False
         
         if self.inventory[item] < amount:
-            return ValueError
+            return False
 
         if self.inventory[item] == amount:
             del self.inventory[item]
