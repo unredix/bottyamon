@@ -27,12 +27,12 @@ class World():
             if shopPity >= 5:
                 events.append(1)
                 shopPity = 0
-                pass
+                continue
 
             if safePointPity >= 10:
                 events.append(15)
                 safePointPity = 0
-                pass
+                continue
 
             if eventNum != 1: shopPity += 1 
             else:
@@ -52,4 +52,3 @@ class World():
         
         return events
         
-
