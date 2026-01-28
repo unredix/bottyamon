@@ -699,8 +699,6 @@ class BottyamonCmd(cmd.Cmd):
                 if isFound:
                     storyTeller("The path is treacherous but passable. You carefully make your way across.")
                     playerMon("Got it!")
-                    self.console.print("[green]You found an alternate route! +15 :money_with_wings:[/]")
-                    self.player.addMoney(15)
                 else:
                     storyTeller("The path is too dangerous and unstable. You have to find another route.")
                     playerMon("...")
@@ -1330,6 +1328,28 @@ class BottyamonCmd(cmd.Cmd):
             self.console.print(f"Generated shop: {tryShop.shopItems}")
 
             shopShow(tryShop.shopItems)
+
+        if args[0] == "addxp":
+            if not self.isLoaded:
+                badUsage("No game is loaded!")
+                return
+            
+            if len(args) < 2:
+                badUsage("Must give XP amount!")
+                return
+            
+            try:
+                xp_amount = int(args[1])
+            except ValueError:
+                badUsage("XP amount must be a number!")
+                return
+            
+            leveled_up = self.player.addXp(xp_amount)
+            if leveled_up:
+                self.console.print(f"[green]+{xp_amount} XP! Player leveled up! New level: {self.player.lvl}[/green]")
+            else:
+                self.console.print(f"[green]+{xp_amount} XP! Current XP: {self.player.xp}/100[/green]")
+
     def do_buy(self, args):
         """buy (ID) (amount)
         Command to put items in your basket"""

@@ -4,44 +4,6 @@
       "debug": false
    },
    "saves": {
-      "debug": {
-         "Bottyamon": {
-            "name": "Koli",
-            "breed": "Fire",
-            "baseAtk": 100,
-            "defense": 10,
-            "hp": 100,
-            "rarity": "A",
-            "isEvo": false
-         },
-         "World": {
-            "events": [
-               2,
-               3,
-               4,
-               4
-            ],
-            "name": "debug",
-            "seed": 12345,
-            "progress": 0,
-            "length": 4
-         },
-         "Player": {
-            "lvl": 0,
-            "xp": 0,
-            "rebirths": 0,
-            "deaths": 0,
-            "inventory": {
-               "Rope": 1,
-               "Duck tape": 1,
-               "Flashlight": 1,
-               "Axe": 1,
-               "Pickaxe": 1
-            },
-            "money": 10,
-            "effects": []
-         }
-      },
       "alma": {
          "Bottyamon": {
             "name": "Sanyika",
