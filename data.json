@@ -1,7 +1,9 @@
 {
-  "settings": {
-    "skip_intro": false,
-    "debug": false
-  },
-  "saves": {}
+   "settings": {
+      "skip_intro": true,
+      "debug": false
+   },
+   "saves": {
+     
+   }
 }

@@ -878,7 +878,9 @@ class BottyamonCmd(cmd.Cmd):
             self.isLoaded = True
             
             self.console.print(f"[cyan]Rebirth #{rebirthCount}[/]")
-            time.sleep(1)
+            time.sleep(3)
+
+            self.bottyamonCreate()
             
             self.mainGame()
         else:
@@ -886,6 +888,97 @@ class BottyamonCmd(cmd.Cmd):
             time.sleep(5)
             self.isLoaded = False
             return False
+
+    def bottyamonCreate(self):
+        with open("data.json", "r") as file:
+                data = json.load(file)
+
+        isDebugVar = isDebug("data.json")
+
+        self.isLoaded = True
+        if data["settings"]["skip_intro"] == True:
+            typeText("...", "green", 1, isEnter=False)
+            if not isDebugVar:
+                clearScreen()
+            self.console.print("\n[black on green]\nIntro Skipped\n[/black on green]\n")
+        else:
+            playIntro()
+        
+        npcMon("I didn't give it a name, so please give it one...", "Old man", isEnter=False)
+        bottyamonName = ""
+        while True:
+            taskTeller("Give your Bottyamon a name: ", isEnter=False)
+            bottyamonName = input()
+            if bottyamonName == "" or bottyamonName == " ":
+                badUsage("You need to give a name to your Bottyamon!")
+                continue
+            else:
+                break
+        time.sleep(1)
+        playerMon(f"I should call you... {bottyamonName}!")
+        npcMon("Great name choice! It's better than any I've ever given!", "Old man")
+        storyTeller("You start thinking about what names the old man could give his pets if the name you gave is considered really good...")
+        npcMon("Now, this Bottyamon has an affinity for three types. Choose one now and train it well!", "Old man", isEnter=False)
+        time.sleep(1)
+        taskTeller("Choose one of these options:", isEnter=False)
+        
+        types = ["Lightning", "Earth", "Water", "Gas", "Darkness", "Shadow", "Stone", "Fire"]
+        got = []
+        random.seed(self.current_world.seed)
+        if isDebugVar:
+            self.console.print(f"Debug: [yellow]Seed used for types[/yellow] {self.current_world.seed}")
+        while len(got) < 3:
+            a = random.choice(types)
+            if a in got:
+                pass
+            else:
+                got.append(a)
+        
+        styles = {
+            "Lightning": ":zap: Lightning",
+            "Earth": ":earth_africa: Earth",
+            "Water": ":ocean: Water",
+            "Gas": ":warning:  Gas",
+            "Darkness": ":new_moon: Darkness",
+            "Shadow": " :black_medium_square: Shadow",
+            "Stone": ":mountain:  Stone",
+            "Fire": ":fire: Fire"
+        }
+        counter = 1
+        for elem in got:
+            style = styles.get(elem, "[gray]???[/gray]")
+            self.console.print(f"\n{style} [{counter}]\n")
+            counter+=1
+        counter = 0
+        choice = None
+        while True:
+            try:
+                choice = int(input())
+            except (ValueError, TypeError):
+                badUsage("Only numbers allowed!")
+                continue
+            if choice > 3 or choice < 1:
+                badUsage("Only numbers 1-3!")
+                continue
+            else:
+                break
+        
+        bottyamonType = got[choice - 1]
+
+        playerMon(f"I'll try to train {bottyamonName} the best I can as a {bottyamonType} type!")
+        typeText("...", "green", 1, isEnter=False)
+
+        self.bottyamon = Bottyamon(bottyamonType, bottyamonName, 100)
+        self.player = Player()
+        self.console.print("[green]A week later[/green]")
+
+        trainedStats = self.bottyamon.train(self.player.rebirths, self.current_world.seed)
+
+        playerMon(f"I finally managed to train you, {bottyamonName}")
+        self.console.print(f"The stats your Bottyamon got:\n\n[red]ATK[/red] :crossed_swords: : {trainedStats[0]}\n[blue]DEF[/blue] :shield: : {trainedStats[1]}\n\n:star: The rarity you got: [yellow]{trainedStats[2]}[/yellow]")
+        time.sleep(1)
+        storyTeller("Now that your Bottyamon is trained, you can go out into the wild and try to reach your destiny.")
+        self.console.print("\n[white on green bold]And the game starts![/]\n")
 
     def do_load(self, args):
         """load save|saves|new (save name)
@@ -951,95 +1044,8 @@ class BottyamonCmd(cmd.Cmd):
                     badUsage('Different choice was made! Defaulting to "n"...')
                     return
             self.current_world = createWorld(name, 15)
-            
-            with open("data.json", "r") as file:
-                data = json.load(file)
-            
-            self.console.print("[green]New game started:[/green]", args[1])
-            self.isLoaded = True
-            if data["settings"]["skip_intro"] == True:
-                typeText("...", "green", 1, isEnter=False)
-                if not isDebugVar:
-                    clearScreen()
-                self.console.print("\n[black on green]\nIntro Skipped\n[/black on green]\n")
-            else:
-                playIntro()
-            
-            npcMon("I didn't give it a name, so please give it one...", "Old man", isEnter=False)
-            bottyamonName = ""
-            while True:
-                taskTeller("Give your Bottyamon a name: ", isEnter=False)
-                bottyamonName = input()
-                if bottyamonName == "" or bottyamonName == " ":
-                    badUsage("You need to give a name to your Bottyamon!")
-                    continue
-                else:
-                    break
-            time.sleep(1)
-            playerMon(f"I should call you... {bottyamonName}!")
-            npcMon("Great name choice! It's better than any I've ever given!", "Old man")
-            storyTeller("You start thinking about what names the old man could give his pets if the name you gave is considered really good...")
-            npcMon("Now, this Bottyamon has an affinity for three types. Choose one now and train it well!", "Old man", isEnter=False)
-            time.sleep(1)
-            taskTeller("Choose one of these options:", isEnter=False)
-            
-            types = ["Lightning", "Earth", "Water", "Gas", "Darkness", "Shadow", "Stone", "Fire"]
-            got = []
-            random.seed(self.current_world.seed)
-            if isDebugVar:
-                self.console.print(f"Debug: [yellow]Seed used for types[/yellow] {self.current_world.seed}")
-            while len(got) < 3:
-                a = random.choice(types)
-                if a in got:
-                    pass
-                else:
-                    got.append(a)
-            
-            styles = {
-                "Lightning": ":zap: Lightning",
-                "Earth": ":earth_africa: Earth",
-                "Water": ":ocean: Water",
-                "Gas": ":warning:  Gas",
-                "Darkness": ":new_moon: Darkness",
-                "Shadow": " :black_medium_square: Shadow",
-                "Stone": ":mountain:  Stone",
-                "Fire": ":fire: Fire"
-            }
-            counter = 1
-            for elem in got:
-                style = styles.get(elem, "[gray]???[/gray]")
-                self.console.print(f"\n{style} [{counter}]\n")
-                counter+=1
-            counter = 0
-            choice = None
-            while True:
-                try:
-                    choice = int(input())
-                except (ValueError, TypeError):
-                    badUsage("Only numbers allowed!")
-                    continue
-                if choice > 3 or choice < 1:
-                    badUsage("Only numbers 1-3!")
-                    continue
-                else:
-                    break
-            
-            bottyamonType = got[choice - 1]
 
-            playerMon(f"I'll try to train {bottyamonName} the best I can as a {bottyamonType} type!")
-            typeText("...", "green", 1, isEnter=False)
-
-            self.bottyamon = Bottyamon(bottyamonType, bottyamonName, 100)
-            self.player = Player()
-            self.console.print("[green]A week later[/green]")
-
-            trainedStats = self.bottyamon.train(self.player.rebirths, self.current_world.seed)
-
-            playerMon(f"I finally managed to train you, {bottyamonName}")
-            self.console.print(f"The stats your Bottyamon got:\n\n[red]ATK[/red] :crossed_swords: : {trainedStats[0]}\n[blue]DEF[/blue] :shield: : {trainedStats[1]}\n\n:star: The rarity you got: [yellow]{trainedStats[2]}[/yellow]")
-            time.sleep(1)
-            storyTeller("Now that your Bottyamon is trained, you can go out into the wild and try to reach your destiny.")
-            self.console.print("\n[white on green bold]And the game starts![/]\n")
+            self.bottyamonCreate()
 
             self.mainGame()
             
