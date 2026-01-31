@@ -30,7 +30,7 @@ class Bottyamon:
             rarity = "B"
         elif rating >= 15 and rating < 20:
             rarity = "A"
-        elif rating >= 21:
+        elif rating >= 20:
             rarity = "S"
 
         self.rarity = rarity
